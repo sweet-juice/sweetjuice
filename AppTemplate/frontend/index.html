@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+    <title>Wails Mobile • Command Center</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --mesh-gradient: radial-gradient(at 0% 0%, rgba(242, 202, 80, 0.05) 0px, transparent 50%),
+                             radial-gradient(at 100% 0%, rgba(242, 202, 80, 0.08) 0px, transparent 50%),
+                             radial-gradient(at 50% 50%, rgba(242, 202, 80, 0.03) 0px, transparent 70%),
+                             radial-gradient(at 0% 100%, rgba(242, 202, 80, 0.04) 0px, transparent 50%);
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        body {
+            background-color: #111415;
+            color: #e1e3e4;
+            overflow-x: hidden;
+            background-image: var(--mesh-gradient);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .glass-panel {
+            background: rgba(25, 28, 29, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid rgba(255, 255, 255, 0.08);
+        }
+        .gold-glow {
+            box-shadow: 0 0 50px rgba(242, 202, 80, 0.06);
+        }
+        .input-glow:focus-within {
+            border-color: rgba(242, 202, 80, 0.3);
+            box-shadow: 0 0 30px rgba(242, 202, 80, 0.1);
+        }
+        .status-pulse {
+            animation: pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .4; transform: scale(1.1); }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .action-card {
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 0.5px solid rgba(153, 144, 124, 0.15);
+        }
+        .action-card:active {
+            transform: scale(0.98);
+            background: rgba(25, 28, 29, 0.9);
+        }
+        @media (min-width: 1024px) {
+            .action-card:hover {
+                border-color: rgba(242, 202, 80, 0.3);
+                transform: translateY(-4px);
+                background: rgba(25, 28, 29, 0.6);
+                box-shadow: 0 12px 40px -12px rgba(0,0,0,0.5);
+            }
+        }
+        .nav-item-active {
+            background: #f2ca50;
+            color: #3c2f00;
+            box-shadow: 0 4px 20px rgba(242, 202, 80, 0.25);
+        }
+        pre::-webkit-scrollbar {
+            width: 4px;
+        }
+        pre::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        pre::-webkit-scrollbar-thumb {
+            background: rgba(242, 202, 80, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#e1e3e4",
+                      "surface-container-low": "#191c1d",
+                      "outline": "#99907c",
+                      "primary": "#f2ca50",
+                      "on-primary": "#3c2f00",
+                      "background": "#111415",
+                      "surface": "#111415",
+                      "on-surface": "#e1e3e4",
+                      "surface-container-high": "#282a2b",
+                      "on-surface-variant": "#d0c5af"
+              },
+              "spacing": {
+                      "unit": "4px",
+                      "margin-mobile": "24px",
+                      "margin-desktop": "64px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter", "sans-serif"],
+                      "display-lg": ["Inter", "sans-serif"],
+                      "headline-lg": ["Inter", "sans-serif"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "24px", "letterSpacing": "-0.01em"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="font-body-md text-body-md selection:bg-primary/30 transition-colors duration-300">
+
+    <!-- TopAppBar -->
+    <header class="fixed top-0 w-full bg-surface/40 backdrop-blur-3xl border-b border-white/5 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 z-50">
+        <div class="flex items-center gap-3">
+            <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10 border border-primary/20">
+                <span class="material-symbols-outlined text-primary text-[20px]" data-icon="security">security</span>
+            </div>
+            <span class="font-bold text-sm tracking-widest text-on-surface uppercase opacity-90">WAILS • Command</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="hidden md:flex items-center gap-3 px-4 py-1.5 bg-surface-container-low rounded-full border border-white/5">
+                <div class="relative flex items-center justify-center">
+                    <span class="absolute w-2 h-2 rounded-full bg-emerald-500/50 status-pulse"></span>
+                    <span class="relative w-2 h-2 rounded-full bg-emerald-500"></span>
+                </div>
+                <span class="text-[12px] font-medium text-on-surface/60">Node Active • Secure</span>
+            </div>
+            <button class="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 hover:bg-white/5 transition-all text-on-surface-variant" id="theme-toggle">
+                <span class="material-symbols-outlined text-[20px] dark:hidden" data-icon="dark_mode">dark_mode</span>
+                <span class="material-symbols-outlined text-[20px] hidden dark:block" data-icon="light_mode">light_mode</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Side Navigation Drawer (Desktop Only) -->
+    <nav class="hidden lg:flex flex-col fixed left-0 top-0 h-screen z-40 bg-surface-container-lowest/30 backdrop-blur-2xl w-72 border-r border-white/5 pt-24 px-6">
+        <div class="flex flex-col gap-1.5">
+            <div class="flex items-center gap-4 p-4 mb-6 rounded-2xl bg-white/5 border border-white/5">
+                <div class="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                    <span class="material-symbols-outlined text-primary" data-icon="shield_person">shield_person</span>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-sm text-on-surface">Superuser</h3>
+                    <p class="text-[11px] text-on-surface-variant/50 uppercase tracking-wider">Level 4 • Authorized</p>
+                </div>
+            </div>
+            <a class="nav-item flex items-center gap-4 text-primary bg-primary/10 rounded-xl px-4 py-3.5 transition-all" href="#" id="nav-dashboard">
+                <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                <span class="font-semibold text-sm">Dashboard</span>
+            </a>
+            <a class="nav-item flex items-center gap-4 text-on-surface-variant/70 hover:text-on-surface hover:bg-white/5 rounded-xl px-4 py-3.5 transition-all" href="#" id="nav-logs">
+                <span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+                <span class="text-sm font-medium">System Logs</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 pt-20 pb-32 min-h-screen flex flex-col items-center px-margin-mobile md:px-margin-desktop">
+        <div class="max-w-[800px] w-full mt-12 space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+
+            <!-- Hero Section -->
+            <div class="text-center space-y-6">
+                <div class="relative inline-block group">
+                    <div class="absolute inset-0 bg-primary/10 blur-[80px] rounded-full group-hover:bg-primary/20 transition-all duration-1000"></div>
+                    <div class="relative w-24 h-24 mx-auto bg-surface-container-high/80 border border-primary/30 rounded-[2.2rem] flex items-center justify-center gold-glow transform rotate-6 transition-transform duration-700 hover:rotate-0">
+                        <span class="material-symbols-outlined text-primary !text-4xl" data-icon="bolt">bolt</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <h1 class="font-display-lg text-display-lg md:text-[56px] text-on-surface leading-[1.1] tracking-tight">
+                        Wails Mobile <span class="text-primary italic">Native Bridge</span>
+                    </h1>
+                    <p class="text-lg text-on-surface-variant/60 max-w-lg mx-auto leading-relaxed">
+                        Interface with Android native plugins through a secure, high-performance bridge.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Plugin Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                <!-- Notifications -->
+                <div class="glass-panel p-6 rounded-[2rem] space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-blue-400 text-[24px]" data-icon="notifications">notifications</span>
+                        </div>
+                        <h2 class="font-semibold text-on-surface">Notifications</h2>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button id="request-notif" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="key">key</span>
+                            <div>
+                                <p class="text-sm font-medium">Request Permission</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Authorize POST_NOTIFICATIONS</p>
+                            </div>
+                        </button>
+                        <button id="send-notif" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="send">send</span>
+                            <div>
+                                <p class="text-sm font-medium">Post Notification</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Dispatch high-importance alert</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Biometrics -->
+                <div class="glass-panel p-6 rounded-[2rem] space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-purple-400 text-[24px]" data-icon="fingerprint">fingerprint</span>
+                        </div>
+                        <h2 class="font-semibold text-on-surface">Biometrics</h2>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button id="check-bio" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="fact_check">fact_check</span>
+                            <div>
+                                <p class="text-sm font-medium">Verify Capability</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Query hardware availability</p>
+                            </div>
+                        </button>
+                        <button id="auth-bio" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="lock_open">lock_open</span>
+                            <div>
+                                <p class="text-sm font-medium">Authenticate</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Trigger native bio prompt</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Picker -->
+                <div class="glass-panel p-6 rounded-[2rem] space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-emerald-400 text-[24px]" data-icon="folder_open">folder_open</span>
+                        </div>
+                        <h2 class="font-semibold text-on-surface">File System</h2>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button id="pick-image" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left w-full">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="image">image</span>
+                            <div>
+                                <p class="text-sm font-medium">Select Media</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Pick images from gallery</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Daemon -->
+                <div class="glass-panel p-6 rounded-[2rem] space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-amber-400 text-[24px]" data-icon="hourglass_empty">hourglass_empty</span>
+                        </div>
+                        <h2 class="font-semibold text-on-surface">Daemon Logic</h2>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button id="start-daemon" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left w-full">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="play_arrow">play_arrow</span>
+                            <div>
+                                <p class="text-sm font-medium">Start Service</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Keep Go alive in background</p>
+                            </div>
+                        </button>
+                        <button id="stop-daemon" class="action-card bg-white/5 p-4 rounded-2xl flex items-center gap-4 text-left w-full">
+                            <span class="material-symbols-outlined text-on-surface-variant" data-icon="stop">stop</span>
+                            <div>
+                                <p class="text-sm font-medium">Stop Service</p>
+                                <p class="text-[11px] text-on-surface-variant/50">Terminate foreground process</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Logs Console -->
+                <div class="glass-panel p-6 rounded-[2rem] space-y-4 md:col-span-2 overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-amber-400 text-[24px]" data-icon="developer_board">developer_board</span>
+                            </div>
+                            <h2 class="font-semibold text-on-surface">System Output</h2>
+                        </div>
+                        <button id="clear-logs" class="text-[10px] uppercase tracking-widest text-on-surface-variant/40 hover:text-primary transition-colors">Clear Buffer</button>
+                    </div>
+                    <pre id="output" class="bg-black/20 rounded-2xl p-4 font-mono text-[12px] text-primary/80 h-48 overflow-y-auto whitespace-pre-wrap border border-white/5">Ready for commands...</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Input Pill (Aesthetics only or for future use) -->
+        <div class="fixed bottom-24 lg:bottom-12 left-0 lg:left-72 right-0 flex justify-center px-margin-mobile pointer-events-none z-40">
+            <div class="glass-panel w-full max-w-[720px] h-[72px] rounded-full flex items-center px-6 gap-4 input-glow pointer-events-auto transition-all gold-glow border-white/10 shadow-2xl">
+                <button class="text-on-surface-variant/40 hover:text-primary transition-colors px-1">
+                    <span class="material-symbols-outlined !text-[24px]" data-icon="terminal">terminal</span>
+                </button>
+                <input class="bg-transparent border-none focus:ring-0 text-on-surface w-full font-body-md text-base placeholder:text-on-surface-variant/20" placeholder="Execute native command..." type="text"/>
+                <button class="w-11 h-11 bg-primary text-on-primary rounded-full flex items-center justify-center hover:brightness-110 transition-all group shrink-0 active:scale-95 shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined text-[20px] group-hover:translate-x-0.5 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation Bar (Mobile Only) -->
+    <nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-surface/80 backdrop-blur-3xl border-t border-white/5">
+        <a class="nav-item-active flex items-center justify-center rounded-2xl w-14 h-14" href="#" id="mobile-nav-dashboard">
+            <span class="material-symbols-outlined !text-[26px] fill-current" data-icon="home" style="font-variation-settings: 'FILL' 1">home</span>
+        </a>
+        <a class="flex items-center justify-center text-on-surface-variant/50 w-14 h-14 hover:text-primary transition-colors" href="#" id="mobile-nav-logs">
+            <span class="material-symbols-outlined !text-[26px]" data-icon="reorder">reorder</span>
+        </a>
+        <a class="flex items-center justify-center text-on-surface-variant/50 w-14 h-14 hover:text-primary transition-colors" href="#">
+            <span class="material-symbols-outlined !text-[26px]" data-icon="settings">settings</span>
+        </a>
+    </nav>
+
+    <script src="wails.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
