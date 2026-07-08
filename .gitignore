@@ -1,0 +1,56 @@
+# Go build artifacts
+bin/
+pkg/
+*.exe
+*.zip
+*.test
+*.out
+#*.jar
+*.aar
+*.so
+/vendor/
+/dist/
+
+#Temps
+./_examples/
+/wailsm
+/wailsm.sh.x.c
+
+# IDE/editor
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Android / Gradle build artifacts
+**/build/
+**/.gradle/
+**/local.properties
+**/captures/
+
+/TODOs.md
+
+# Generated Android library outputs
+**/native/android/*.iml
+**/native/android/.gradle
+**/native/android/local.properties
+**/native/android/.idea/
+**/native/android/.idea/caches
+**/native/android/.idea/libraries
+**/native/android/.idea/modules.xml
+**/native/android/.idea/workspace.xml
+**/native/android/.idea/navEditor.xml
+**/native/android/.idea/assetWizardSettings.xml
+**/native/android/.DS_Store
+**/native/android/build
+**/native/android/captures
+**/native/android/.externalNativeBuild
+**/native/android/.cxx
+**/native/android/local.properties
+#**/native/android/gradle
+**/native/android/app/src/main/java/com/wailspackage
+
+# Temporary files
+temp/
+*.xip
+./sweetjuice-docs

@@ -1,0 +1,72 @@
+version: '3'
+
+vars:
+  CLI_NAME: juice
+  SRC_PATH: ./cmd/
+
+tasks:
+  default:
+    desc: Lists available development tasks
+    cmds:
+      - task --list
+
+  docs:
+    desc: Generate individual DOCS.md files surgically based on your host operating system
+    preconditions:
+      - sh: 'command -v gomarkdoc >/dev/null 2>&1'
+        msg: "gomarkdoc is required but not installed. Run: go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest"
+    cmds:
+      - echo "Detecting host operating system environment... [Host OS:{{OS}}]"
+      - defer: echo "Documentation generation pass completed."
+      - task: '{{if eq OS "windows"}}docs-windows{{else}}docs-unix{{end}}'
+
+  docs-unix:
+    internal: true
+    platforms: [linux, darwin]
+    cmds:
+      - echo "Executing Unix find pipeline..."
+      - |
+        for dir in $(find . -name "*.go" -not -path "*/.*" | xargs -I {} dirname {} | sort -u); do
+          echo "Processing package: ${dir}"
+          gomarkdoc -o "${dir}/DOCS.md" "${dir}"
+        done
+
+  docs-windows:
+    internal: true
+    platforms: [windows]
+    cmds:
+      - echo "Executing native Windows PowerShell directory harvesting loop..."
+      # This uses native PowerShell syntax to recursively find directories holding .go files, 
+      # isolates unique folders, and passes them straight to gomarkdoc.
+      - powershell -Command "Get-ChildItem -Recurse -Filter *.go | Where-Object { \$_.FullName -notlike '*\.*' } | ForEach-Object { Split-Path \$_.FullName -Parent } | Select-Object -Unique | ForEach-Object { Write-Host 'Processing package:' \$_; gomarkdoc -o \"\$_/DOCS.md\" \$_ }"
+
+  juice:
+    desc: Cross-compile the Go-based juice toolchain CLI for Linux, macOS, and Windows
+    cmds:
+      - echo "Building wails-mobile production Go CLI engine..."
+      - mkdir -p dist/linux dist/darwin dist/windows
+      
+      # Cross-compiling for Linux target architectures
+      - GOOS=linux GOARCH=amd64 go build -o dist/linux/{{.CLI_NAME}} {{.SRC_PATH}}
+      
+      # Cross-compiling for Apple Silicon (M1/M2/M3) environments
+      - GOOS=darwin GOARCH=arm64 go build -o dist/darwin/{{.CLI_NAME}} {{.SRC_PATH}}
+      
+      # Cross-compiling for Windows environments
+      - GOOS=windows GOARCH=amd64 go build -o dist/windows/{{.CLI_NAME}}.exe {{.SRC_PATH}}
+      
+      - echo "All production cross-compilation binaries staged inside ./dist/"
+
+  clean:
+    desc: Clean up build artifacts, binaries, and generated DOCS.md files across platforms
+    cmds:
+      - echo "Cleaning build distributions..."
+      - rm -rf ./dist/
+      - echo "Removing scattered DOCS.md files..."
+      - |-
+        {{if eq OS "windows"}}
+          powershell -Command "Get-ChildItem -Recurse -Filter DOCS.md | Remove-Item -Force"
+        {{else}}
+          find . -name "DOCS.md" -type f -delete
+        {{end}}
+      - echo "Cleanup process complete."
