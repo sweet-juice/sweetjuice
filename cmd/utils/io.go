@@ -59,6 +59,18 @@ func CommandExists(name string) bool {
 	return err == nil
 }
 
+// EnsureGoMobileTools checks if gomobile and gobind are installed, and installs them if missing.
+func EnsureGoMobileTools() {
+	if !CommandExists("gomobile") || !CommandExists("gobind") {
+		fmt.Println("Go Mobile build tools missing. Installing...")
+		RunCmd("go", "install", "golang.org/x/mobile/cmd/gomobile@latest")
+		RunCmd("go", "install", "golang.org/x/mobile/cmd/gobind@latest")
+
+		fmt.Println("Initializing Go Mobile environment...")
+		RunCmd("gomobile", "init")
+	}
+}
+
 // RunCmd executes an external command and pipes its output directly to the current process's stdout and stderr.
 func RunCmd(name string, args ...string) {
 	cmd := exec.Command(name, args...)
@@ -66,6 +78,40 @@ func RunCmd(name string, args ...string) {
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		Fatal(fmt.Sprintf("Command failed: %s", name), err)
+	}
+}
+
+// BuildFrontend executes the frontend build command defined in the config.ini file.
+func BuildFrontend() {
+	config := LoadConfig()
+	buildCommand := config.GetOrDefault("build", "frontend_build_command", "")
+	if buildCommand == "" {
+		return
+	}
+
+	frontendDir := config.GetOrDefault("build", "frontend_dir", "frontend")
+	if !DirExists(frontendDir) {
+		return
+	}
+
+	fmt.Printf("Building frontend with command: %s\n", buildCommand)
+
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(frontendDir)
+	defer func() { _ = os.Chdir(origWd) }()
+
+	// Execute command via shell to support && and complex syntax
+	var cmd *exec.Cmd
+	if IsWindowsHost() {
+		cmd = exec.Command("cmd", "/C", buildCommand)
+	} else {
+		cmd = exec.Command("sh", "-c", buildCommand)
+	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Frontend build failed: %v\n", err)
 	}
 }
 
@@ -124,6 +170,45 @@ func UnzipTarget(src string, dest string) error {
 		}
 	}
 	return nil
+}
+
+// CopyFile copies a single file from src to dest.
+func CopyFile(src, dest string) error {
+	s, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	info, err := s.Stat()
+	if err != nil {
+		return err
+	}
+
+	d, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode())
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	if _, err := io.Copy(d, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MoveFile renames a file, or copies and deletes it if a rename fails (e.g., cross-device).
+func MoveFile(src, dest string) error {
+	err := os.Rename(src, dest)
+	if err == nil {
+		return nil
+	}
+
+	// Fallback to copy and delete
+	if err := CopyFile(src, dest); err != nil {
+		return err
+	}
+	return os.Remove(src)
 }
 
 // CopyDirectory recursively copies a directory and its contents from scrDir to destDir.

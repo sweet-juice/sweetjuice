@@ -19,33 +19,43 @@ func (a *Application) ReadAsset(urlPath string) *AssetResponse {
 	// Clean up paths arriving from the WebView container
 	cleanPath := path.Clean(strings.TrimPrefix(urlPath, "/"))
 	if cleanPath == "." || cleanPath == "" {
-		cleanPath = "frontend/index.html"
-	} else if !strings.HasPrefix(cleanPath, "frontend/") {
-		cleanPath = "frontend/" + cleanPath
+		cleanPath = "index.html"
 	}
 
-	file, err := a.options.Assets.Open(cleanPath)
-	if err != nil {
+	// Potential locations to search for the asset
+	searchPaths := []string{
+		cleanPath,
+		path.Join("frontend", cleanPath),
+		path.Join("frontend", "dist", cleanPath),
+		path.Join("dist", cleanPath),
+	}
+
+	var data []byte
+	var finalPath string
+	found := false
+
+	for _, p := range searchPaths {
+		file, err := a.options.Assets.Open(p)
+		if err == nil {
+			data, _ = io.ReadAll(file)
+			file.Close()
+			finalPath = p
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		return &AssetResponse{
 			Data:       []byte(fmt.Sprintf("Asset not found: %s", cleanPath)),
 			MimeType:   "text/plain",
 			StatusCode: 404,
 		}
 	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return &AssetResponse{
-			Data:       []byte("Internal asset extraction failure"),
-			MimeType:   "text/plain",
-			StatusCode: 500,
-		}
-	}
 
 	return &AssetResponse{
 		Data:       data,
-		MimeType:   getMimeType(cleanPath),
+		MimeType:   getMimeType(finalPath),
 		StatusCode: 200,
 	}
 }
@@ -56,8 +66,8 @@ func getMimeType(filePath string) string {
 		return "text/html"
 	case ".css":
 		return "text/css"
-	case ".js":
-		return "application/javascript"
+	case ".js", ".mjs":
+		return "text/javascript"
 	case ".json":
 		return "application/json"
 	case ".png":

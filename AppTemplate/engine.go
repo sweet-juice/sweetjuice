@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sweet-juice/sweetjuice/core"
 	"github.com/sweet-juice/sweetjuice/plugins/biometric"
 	"github.com/sweet-juice/sweetjuice/plugins/daemon"
 	"github.com/sweet-juice/sweetjuice/plugins/filepicker"
@@ -12,10 +13,9 @@ import (
 	"github.com/sweet-juice/sweetjuice/plugins/notification"
 	"github.com/sweet-juice/sweetjuice/plugins/permission"
 	"github.com/sweet-juice/sweetjuice/plugins/workmanager"
-	"github.com/sweet-juice/sweetjuice/core"
 )
 
-//go:embed frontend/*
+//go:embed frontend/dist/*
 var assets embed.FS
 
 // Global plugin instances

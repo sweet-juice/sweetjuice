@@ -127,9 +127,7 @@ func ValidateAndroidEnvironment() {
 		SetupAndroidLocalProperties(".")
 	}
 
-	if !utils.CommandExists("gomobile") {
-		utils.Fatal("gomobile tool missing", fmt.Errorf("please run 'go install golang.org/x/mobile/cmd/gomobile@latest' and 'gomobile init'"))
-	}
+	utils.EnsureGoMobileTools()
 }
 
 func applyConfig() {
@@ -149,6 +147,10 @@ func applyConfig() {
 func RefreshPipeline() {
 	ValidateAndroidEnvironment()
 	applyConfig()
+
+	// Build frontend first
+	utils.BuildFrontend()
+
 	outputPath := filepath.Join("native", "android", "app", "libs")
 	targetJavaSrcDir := filepath.Join("native", "android", "app", "src", "main", "java")
 	stagingPluginsDir := filepath.Join(".plugins", "android")
@@ -238,6 +240,17 @@ func RunPipeline() {
 	packageName, launcherActivity, err := parseManifestDetails(manifestPath)
 	if err != nil {
 		return
+	}
+
+	// Fallback for packageName from config if not in manifest
+	if packageName == "" {
+		config := utils.LoadConfig()
+		packageName = config.GetOrDefault("app", "package", "com.sweetjuice.app")
+	}
+
+	// Ensure launcher activity is fully qualified if it starts with a dot
+	if strings.HasPrefix(launcherActivity, ".") {
+		launcherActivity = packageName + launcherActivity
 	}
 
 	fmt.Printf("Launching application %s/%s...\n", packageName, launcherActivity)
