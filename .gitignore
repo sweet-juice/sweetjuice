@@ -1,12 +1,12 @@
 # Go build artifacts
 bin/
-pkg/
 *.exe
 *.zip
 *.test
 *.out
 #*.jar
 *.aar
+**/native/ios/SweetJuice.xcframework/
 *.so
 /vendor/
 /dist/
@@ -21,6 +21,15 @@ pkg/
 *.iml
 .vscode/
 .DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Android / Gradle build artifacts
 **/build/
@@ -50,7 +59,32 @@ pkg/
 #**/native/android/gradle
 **/native/android/app/src/main/java/com/wailspackage
 
+# Frontend build artifacts
+# Logs
+/frontend/logs
+/frontend/*.log
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+/frontend/lerna-debug.log*
+/frontend/node_modules
+#/frontend/dist
+/frontend/dist-ssr
+/frontend/*.local
+
 # Temporary files
+temps/
 temp/
 *.xip
 ./sweetjuice-docs
+./test/
+.build/android/*
+./build/ios/*
+.future.md
+/AppTemplate/bindings
+/AppTemplate/native/android/app/libs/*.jar
+/AppTemplate/native/android/app/libs/*.aar
+/AppTemplate/native/ios/*.xcframework
+/AppTemplate/frontend/dist/
+/AppTemplate/frontend/node_modules/

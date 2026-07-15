@@ -3,27 +3,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "sweetjuice",
+    name: "GenericApp",
     platforms: [
         .iOS(.v17),
         .macOS(.v14),
     ],
     products: [
-        // An xtool project should contain exactly one library product,
-        // representing the main app.
         .library(
-            name: "sweetjuice",
-            targets: ["sweetjuice"]
+            name: "App",
+            targets: ["GenericApp"]
         ),
     ],
     targets: [
         .target(
-            name: "sweetjuice",
+            name: "GenericApp",
             dependencies: ["Sweetjuice"]
         ),
         .binaryTarget(
             name: "Sweetjuice",
-            path: "sweetjuice.xcframework"
+            path: "Sweetjuice.xcframework"
         )
     ]
 )

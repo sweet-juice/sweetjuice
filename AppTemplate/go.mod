@@ -2,7 +2,7 @@ module helloworld
 
 go 1.26.3
 
-require github.com/sweet-juice/sweetjuice v1.4.0
+require github.com/sweet-juice/sweetjuice v1.5.0
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
@@ -14,4 +14,4 @@ require (
 
 tool golang.org/x/mobile/cmd/gobind
 
-replace github.com/sweet-juice/sweetjuice => ../../
+replace github.com/sweet-juice/sweetjuice => ../

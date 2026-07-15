@@ -47,16 +47,33 @@ func CreateNewProject(targetDir string) {
 		os.Exit(1)
 	}
 
-	fmt.Println("Ensuring sweetjuice core is in module cache...")
-	// We use 'go get' to ensure it's cached, then 'go list' to find it.
-	_ = exec.Command("go", "get", "github.com/sweet-juice/sweetjuice@latest").Run()
-
-	fmt.Println("Locating project template...")
+	fmt.Println("Locating Sweet Juice core...")
+	// 1. Try to find the module in the current context (handles development in-repo)
 	out, err := exec.Command("go", "list", "-m", "-f", "{{.Dir}}", "github.com/sweet-juice/sweetjuice").Output()
-	if err != nil {
-		utils.Fatal("Failed to locate sweetjuice core in module cache. Try running 'go get github.com/sweet-juice/sweetjuice@latest' manually.", err)
-	}
 	coreDir := strings.TrimSpace(string(out))
+
+	// 2. If not found or empty, try to get it from module cache/remote
+	if err != nil || coreDir == "" {
+		fmt.Println("Core not found in local context, checking module cache...")
+		// Use @latest to ensure it's looked up in the global index if not in current go.mod
+		out, err = exec.Command("go", "list", "-m", "-f", "{{.Dir}}", "github.com/sweet-juice/sweetjuice@latest").Output()
+		coreDir = strings.TrimSpace(string(out))
+	}
+
+	// 3. Fallback: if we are still empty, try to find the binary's parent if it looks like the repo
+	if coreDir == "" {
+		exePath, _ := os.Executable()
+		// If running from dist/linux/juice, go up 3 levels
+		repoCandidate := filepath.Join(filepath.Dir(exePath), "..", "..")
+		if utils.FileExists(filepath.Join(repoCandidate, "go.mod")) {
+			coreDir, _ = filepath.Abs(repoCandidate)
+		}
+	}
+
+	if coreDir == "" {
+		utils.Fatal("Failed to locate Sweet Juice core directory", fmt.Errorf("please ensure you have github.com/sweet-juice/sweetjuice installed or are running from the source repo"))
+	}
+
 	templatePath := filepath.Join(coreDir, "AppTemplate")
 
 	if !utils.DirExists(templatePath) {
@@ -68,31 +85,43 @@ func CreateNewProject(targetDir string) {
 		utils.Fatal("Failed to copy template to target directory", err)
 	}
 
-	android.SetupAndroidLocalProperties(targetDir)
+	// Remove node_modules from target if it was copied (to prevent path issues)
+	_ = os.RemoveAll(filepath.Join(targetDir, "frontend", "node_modules"))
 
-	// Initialize iOS directory structure
-	iosDir := filepath.Join(targetDir, "native", "ios")
-	if !utils.DirExists(iosDir) {
-		_ = os.MkdirAll(iosDir, 0755)
+	// Update go.mod in the target directory to point to the local coreDir for development
+	// or remove the replace if we want to use the module cache version.
+	// Presuming the user wants to work with the version they just used to scaffold.
+	targetGoMod := filepath.Join(targetDir, "go.mod")
+	if utils.FileExists(targetGoMod) && coreDir != "" {
+		fmt.Println("Configuring project dependencies...")
+		// Rename the module to the target directory name
+		utils.RunCmd("go", "mod", "edit", "-module="+targetDir, targetGoMod)
+		// Remove existing replace if any
+		utils.RunCmd("go", "mod", "edit", "-dropreplace=github.com/sweet-juice/sweetjuice", targetGoMod)
+		// Add new replace pointing to the absolute coreDir
+		utils.RunCmd("go", "mod", "edit", "-replace=github.com/sweet-juice/sweetjuice="+coreDir, targetGoMod)
 	}
+
+	android.SetupAndroidLocalProperties(targetDir)
 
 	origWd, _ := os.Getwd()
 	_ = os.Chdir(targetDir)
 	defer func() { _ = os.Chdir(origWd) }()
 
-	fmt.Println("Initializing Go Mobile build tools...")
-	utils.RunCmd("go", "install", "golang.org/x/mobile/cmd/gomobile@latest")
-	utils.RunCmd("go", "install", "golang.org/x/mobile/cmd/gobind@latest")
-	utils.RunCmd("gomobile", "init")
+	// Trigger frontend build as specified in config.ini
+	utils.BuildFrontend()
+
+	// Initialize Go Mobile build tools only if missing
+	utils.EnsureGoMobileTools()
 
 	if utils.FileExists("go.mod") {
 		fmt.Println("Valid Go module context detected. Binding tool tracking dependencies...")
 		utils.RunCmd("go", "mod", "tidy")
-		utils.RunCmd("go", "get", "-tool", "golang.org/x/mobile/cmd/gobind")
+		// gobind is required as a tool for the project
+		if !utils.CommandExists("gobind") {
+			utils.RunCmd("go", "get", "-tool", "golang.org/x/mobile/cmd/gobind")
+		}
 	}
-
-	// Scaffold iOS project using natively installed xtool
-	ios.ScaffoldProject(targetDir)
 
 	fmt.Fprintf(os.Stdout, "=== Setup complete! Your project is ready in ./%s ===\n", targetDir)
 }

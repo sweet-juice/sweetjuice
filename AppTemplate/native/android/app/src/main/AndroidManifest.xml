@@ -26,11 +26,11 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_wails"
+        android:icon="@mipmap/ic_juice"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_wails_round"
+        android:roundIcon="@mipmap/ic_juice_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.WailsMobile"
+        android:theme="@style/Theme.SweetJuice"
         android:windowSoftInputMode="adjustResize"
         >
 
