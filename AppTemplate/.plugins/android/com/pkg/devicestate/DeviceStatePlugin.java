@@ -1,4 +1,4 @@
-package com.wailspackage.devicestate;
+package com.juicepackage.devicestate;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,14 +15,14 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import wailsmobile.Wailsmobile;
+import juicemobile.SweetJuicemobile;
 
-public class DeviceStatePlugin implements WailsPlugin {
+public class DeviceStatePlugin implements SweetJuicePlugin {
     private static final String TAG = "DeviceStatePlugin";
     private Context mContext;
     private BroadcastReceiver mBatteryReceiver;
@@ -306,7 +306,7 @@ public class DeviceStatePlugin implements WailsPlugin {
         try {
             String stateJson = buildStateJson();
             String payload = "[" + stateJson + "]";
-            Wailsmobile.handleNativeAction("devicestate:changed", payload);
+            SweetJuicemobile.handleNativeAction("devicestate:changed", payload);
         } catch (JSONException e) {
             Log.e(TAG, "Failed to emit device state change", e);
         }

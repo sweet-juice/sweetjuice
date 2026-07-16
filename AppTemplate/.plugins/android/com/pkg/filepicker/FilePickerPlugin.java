@@ -1,4 +1,4 @@
-package com.wailspackage.filepicker;
+package com.juicepackage.filepicker;
 
 import android.app.Activity;
 import android.content.Context;
@@ -8,17 +8,17 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import wailsmobile.Wailsmobile;
+import juicemobile.SweetJuicemobile;
 
 /**
  * FilePickerPlugin allows selecting files or media from the device.
  */
-public class FilePickerPlugin implements WailsPlugin {
+public class FilePickerPlugin implements SweetJuicePlugin {
     private static final String TAG = "FilePickerPlugin";
     private static final int PICK_FILE_REQUEST = 4422;
     private Context mContext;
@@ -87,12 +87,12 @@ public class FilePickerPlugin implements WailsPlugin {
                     }
                     
                     String payload = "[" + result.toString() + "]";
-                    Wailsmobile.handleNativeAction("filepicker:result", payload);
+                    SweetJuicemobile.handleNativeAction("filepicker:result", payload);
                 } catch (JSONException e) {
                     Log.e(TAG, "Failed to build result JSON", e);
                 }
             } else {
-                Wailsmobile.handleNativeAction("filepicker:result", "[{\"error\":\"cancelled\"}]");
+                SweetJuicemobile.handleNativeAction("filepicker:result", "[{\"error\":\"cancelled\"}]");
             }
         }
     }

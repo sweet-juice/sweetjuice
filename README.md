@@ -44,16 +44,19 @@ Sweet Juice is an early port of Go v3 implementation to support mobile devies.
 
 ## Pre-packed plugins
 
-- `plugins/logger`
-- `plugins/notification`
-- `plugins/permission`
-- `plugins/devicestate`
-- `plugins/workmanager`
-- `plugins/osapi`
-- `plugins/biometrics`
-- `plugins/filepicker`
+| Plugin | Android | iOS |
+| :--- | :---: | :---: |
+| `plugins/logger` | `Yes` | `Yes` |
+| `plugins/notification` | `Yes` | `Yes` |
+| `plugins/permission` | `Yes` | `Yes` |
+| `plugins/special-permission` | `Yes` | `No` |
+| `plugins/devicestate` | `Yes` | `Yes` |
+| `plugins/workmanager` | `Yes` | `Yes` |
+| `plugins/osapi` | `Yes` | `Yes` |
+| `plugins/biometrics` | `Yes` | `Yes` |
+| `plugins/filepicker` | `Yes` | `Yes` |
 
-See - [Full List](#)
+See [Full List](#)
 
 ## Notes
 

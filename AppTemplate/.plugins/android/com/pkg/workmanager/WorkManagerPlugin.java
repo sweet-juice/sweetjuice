@@ -1,4 +1,4 @@
-package com.wailspackage.workmanager;
+package com.juicepackage.workmanager;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +9,7 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * WorkManagerPlugin (WorkManager) allows Go to schedule background tasks.
  */
-public class WorkManagerPlugin implements WailsPlugin {
+public class WorkManagerPlugin implements SweetJuicePlugin {
     private Context mContext;
 
     @Override
@@ -40,7 +40,7 @@ public class WorkManagerPlugin implements WailsPlugin {
             if ("enqueueOneTime".equals(action)) {
                 Data inputData = new Data.Builder().putString("task_key", taskKey).build();
 
-                OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(WailsBackgroundWorker.class)
+                OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(SweetJuiceBackgroundWorker.class)
                         .setInputData(inputData)
                         .setConstraints(constraints)
                         .build();
@@ -54,7 +54,7 @@ public class WorkManagerPlugin implements WailsPlugin {
                 Data inputData = new Data.Builder().putString("task_key", taskKey).build();
 
                 PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
-                        WailsBackgroundWorker.class, intervalMinutes, TimeUnit.MINUTES)
+                        SweetJuiceBackgroundWorker.class, intervalMinutes, TimeUnit.MINUTES)
                         .setInputData(inputData)
                         .setConstraints(constraints)
                         .build();

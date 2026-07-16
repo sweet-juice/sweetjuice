@@ -38,9 +38,9 @@ token, err := dataStorePlugin.Get("user_token", "")
 
 ```js
 // Set value
-await Wails.CallGo('DataStorePlugin.Set', "theme", "dark");
+await SweetJuice.CallGo('DataStorePlugin.Set', "theme", "dark");
 
 // Get value
-const theme = await Wails.CallGo('DataStorePlugin.Get', "theme", "light");
+const theme = await SweetJuice.CallGo('DataStorePlugin.Get', "theme", "light");
 console.log("Current theme:", theme);
 ```

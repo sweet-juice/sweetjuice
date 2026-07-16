@@ -6,7 +6,7 @@
 import "github.com/sweet-juice/sweetjuice/cmd"
 ```
 
-Package main provides the entry point for the wailsm CLI tool. It handles command\-line argument parsing and routes requests to the appropriate command handlers in the commands package.
+Package main provides the entry point for the juice CLI tool. It handles command\-line argument parsing and routes requests to the appropriate command handlers in the commands package.
 
 ## Index
 

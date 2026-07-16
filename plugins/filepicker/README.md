@@ -38,13 +38,13 @@ filePickerPlugin.PickFile(filepicker.PickerOptions{
 
 ```js
 // Trigger picker
-await Wails.CallGo('FilePickerPlugin.PickFile', {
+await SweetJuice.CallGo('FilePickerPlugin.PickFile', {
     mime_type: "*/*",
     multiple: true
 });
 
 // Listen for results
-Wails.on("filepicker:result", (result) => {
+SweetJuice.on("filepicker:result", (result) => {
     if (result.error) {
         console.error("Picker error:", result.error);
         return;

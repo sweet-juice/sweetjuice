@@ -43,17 +43,17 @@ if res.Can {
 
 ```js
 // Check availability
-const res = await Wails.CallGo('BiometricPlugin.CanAuthenticate');
+const res = await SweetJuice.CallGo('BiometricPlugin.CanAuthenticate');
 if (res.can_authenticate) {
     // Start auth
-    await Wails.CallGo('BiometricPlugin.Authenticate', {
+    await SweetJuice.CallGo('BiometricPlugin.Authenticate', {
         title: "Confirm Action",
         negative_button_text: "Cancel"
     });
 }
 
 // Listen for results
-Wails.on("biometric:result", (result) => {
+SweetJuice.on("biometric:result", (result) => {
     if (result.success) {
         console.log("Authenticated!");
     } else {

@@ -50,12 +50,12 @@ You must register the service and the foreground permission in your `AndroidMani
 
 <application ...>
     <service
-        android:name="com.wailspackage.daemon.WailsDaemonService"
+        android:name="com.wailspackage.daemon.SweetJuiceDaemonService"
         android:enabled="true"
         android:exported="false"
         android:foregroundServiceType="specialUse">
         <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                  android:value="Wails Background Logic"/>
+                  android:value="SweetJuice Background Logic"/>
     </service>
 </application>
 ```

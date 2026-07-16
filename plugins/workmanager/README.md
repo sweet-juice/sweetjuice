@@ -56,7 +56,7 @@ wmPlugin.EnqueuePeriodic("sync_data", 15, nil) //15 minutes minimum
 
 ```js
 // From JS
-await Wails.CallGo('WorkManagerPlugin.EnqueuePeriodic', "sync_data", 15);
+await SweetJuice.CallGo('WorkManagerPlugin.EnqueuePeriodic', "sync_data", 15);
 ```
 
 ### One-Time Work
@@ -87,7 +87,7 @@ const constraints = {
     network_type: "UNMETERED",
     requires_charging: true
 };
-await Wails.CallGo('WorkManagerPlugin.EnqueuePeriodic', "sync_data", 60, constraints);
+await SweetJuice.CallGo('WorkManagerPlugin.EnqueuePeriodic', "sync_data", 60, constraints);
 ```
 
 ---

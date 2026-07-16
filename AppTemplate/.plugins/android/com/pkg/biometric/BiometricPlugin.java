@@ -1,4 +1,4 @@
-package com.wailspackage.biometric;
+package com.juicepackage.biometric;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,19 +11,19 @@ import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.concurrent.Executor;
 
-import wailsmobile.Wailsmobile;
+import juicemobile.SweetJuicemobile;
 
 /**
  * BiometricPlugin provides access to biometric authentication (Fingerprint, Face, etc.)
  */
-public class BiometricPlugin implements WailsPlugin {
+public class BiometricPlugin implements SweetJuicePlugin {
     private static final String TAG = "BiometricPlugin";
     private Context mContext;
     private AppCompatActivity mActivity;
@@ -164,7 +164,7 @@ public class BiometricPlugin implements WailsPlugin {
                 result.put("error_code", errorCode);
             }
             String payload = "[" + result.toString() + "]";
-            Wailsmobile.handleNativeAction("biometric:result", payload);
+            SweetJuicemobile.handleNativeAction("biometric:result", payload);
         } catch (JSONException e) {
             Log.e(TAG, "Failed to send biometric result", e);
         }

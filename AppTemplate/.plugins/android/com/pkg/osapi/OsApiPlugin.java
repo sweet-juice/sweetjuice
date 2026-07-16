@@ -1,16 +1,16 @@
-package com.wailspackage.osapi;
+package com.juicepackage.osapi;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * OsApiPlugin provides information about the Android system version.
  */
-public class OsApiPlugin implements WailsPlugin {
+public class OsApiPlugin implements SweetJuicePlugin {
     @Override
     public String getDomain() { return "osapi"; }
 

@@ -59,4 +59,4 @@ export const SweetJuice = {
 
 window.SweetJuice = SweetJuice;
 // Compatibility with old templates
-window.Wails = SweetJuice;
+window.SweetJuice = SweetJuice;

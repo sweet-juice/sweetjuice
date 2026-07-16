@@ -39,7 +39,7 @@ log.Error("Failed to save state: %v", err)
 ## Example output in ADB or Logcat:
 
 ```log
-2026-05-23 22:56:26.275 13811-13954 MyAppTag  com.example.wailsmobile  [I]  App started successfully
+2026-05-23 22:56:26.275 13811-13954 MyAppTag  com.example.juiceobile  [I]  App started successfully
 ```
 ---
 

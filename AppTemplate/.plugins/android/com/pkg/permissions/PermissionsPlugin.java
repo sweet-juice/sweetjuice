@@ -1,4 +1,4 @@
-package com.wailspackage.permissions;
+package com.juicepackage.permissions;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,18 +9,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import wailsmobile.Wailsmobile;
+import juicemobile.SweetJuicemobile;
 
 /**
  * PermissionsPlugin handles system runtime permissions.
  * It is background-aware for status checks but requires an active Activity for request prompts.
  */
-public class PermissionsPlugin implements WailsPlugin {
+public class PermissionsPlugin implements SweetJuicePlugin {
     private Context mContext;
     private AppCompatActivity mActivity;
     private static final int PERMISSION_REQ_CODE = 9911;
@@ -69,7 +69,7 @@ public class PermissionsPlugin implements WailsPlugin {
                 result.put("permission", permission);
                 result.put("granted", granted);
                 String payload = "[" + result.toString() + "]";
-                Wailsmobile.handleNativeAction("permissions:result", payload);
+                SweetJuicemobile.handleNativeAction("permissions:result", payload);
             } catch (JSONException e) {
                 Log.e("PermissionsPlugin", "Error creating result JSON", e);
             }

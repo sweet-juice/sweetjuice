@@ -136,7 +136,7 @@ struct SweetJuiceWebView: UIViewRepresentable {
                 on: window.SweetJuiceEvents.on.bind(window.SweetJuiceEvents),
                 dispatch: window.SweetJuiceEvents.dispatch.bind(window.SweetJuiceEvents)
               };
-              window.Wails = window.SweetJuiceBind;
+              window.SweetJuice = window.SweetJuiceBind;
             }
             """
             webView.evaluateJavaScript(js)

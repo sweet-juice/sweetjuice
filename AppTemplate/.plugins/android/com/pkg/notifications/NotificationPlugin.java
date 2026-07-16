@@ -1,4 +1,4 @@
-package com.wailspackage.notifications;
+package com.juicepackage.notifications;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,7 +15,7 @@ import org.json.JSONObject;
 /**
  * NotificationPlugin allows Go to post system notifications.
  */
-public class NotificationPlugin implements WailsPlugin {
+public class NotificationPlugin implements SweetJuicePlugin {
     private Context mContext;
 
     @Override

@@ -55,7 +55,7 @@ notifyPlugin.Post(notification.Notification{
 ## Usage from Frontend (JavaScript)
 
 ```js
-await Wails.CallGo('NotificationPlugin.Post', {
+await SweetJuice.CallGo('NotificationPlugin.Post', {
     id: 0,
     title: "UI Alert",
     body: "Triggered by JS, posted by Go",

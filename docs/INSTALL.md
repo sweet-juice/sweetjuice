@@ -11,18 +11,18 @@ This document contains the installation, bootstrapping, build and uninstall step
 
 ## CLI installation
 
-You can use `Go` to install `Sweet Juice` CLI tool `wailsm`.
+You can use `Go` to install `Sweet Juice` CLI tool `juice`.
 
 * Using `Go`:
 
 ```bash
-go install github.com/sweet-juice/sweetjuice/cmd/wailsm@latest
+go install github.com/sweet-juice/sweetjuice/cmd/juice@latest
 ```
 
 ## Bootstrapping a new project
 
 ```bash
-wailsm --new my-new-app
+juice --new my-new-app
 ```
 
 This scaffolds a fresh project from the local `AppTemplate` included in the Sweet Juice module.
@@ -40,9 +40,9 @@ This scaffolds a fresh project from the local `AppTemplate` included in the Swee
 The CLI performs an automatic sync before `build` and `run`. Manually trigger sync when you want to force a regeneration:
 
 ```bash
-wailsm --refresh android
+juice --refresh android
 # or
-wailsm --refresh ios
+juice --refresh ios
 ```
 
 This drops the resulting `.aar` (Android) or `.xcframework` (iOS) into the respective native project directories.
@@ -53,29 +53,29 @@ Run on a connected device:
 
 ```bash
 # For Android (via ADB)
-wailsm --run android
+juice --run android
 
 # For iOS (via xtool)
-wailsm --run ios
+juice --run ios
 ```
 
 ## Build release binaries:
 
 ```bash
 # Android
-wailsm --build android debug
-wailsm --build android release
-wailsm --build android bundle
+juice --build android debug
+juice --build android release
+juice --build android bundle
 
 # iOS
-wailsm --build ios debug
-wailsm --build ios release
+juice --build ios debug
+juice --build ios release
 ```
 
 ## To Uninstall Sweet Juice CLI:
 
 ```shell
-rm $(go env GOPATH)/bin/wailsm     
+rm $(go env GOPATH)/bin/juice     
 ```
 
 
@@ -83,6 +83,6 @@ rm $(go env GOPATH)/bin/wailsm
 
 - Ensure `ANDROID_HOME` or equivalent environment variables are set or Android Studio is installed in default locations.
 - For iOS, ensures `xtool` and Xcode Command Line Tools are installed.
-- If bindings seem stale, run `wailsm --refresh <platform>` to force a rebuild.
+- If bindings seem stale, run `juice --refresh <platform>` to force a rebuild.
 
 For additional developer notes see `docs/CONTRIBUTING.md` and the project `plugins/` directory.

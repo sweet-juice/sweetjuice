@@ -1,4 +1,4 @@
-package com.wailspackage.workmanager;
+package com.juicepackage.workmanager;
 
 import android.content.Context;
 import android.util.Log;
@@ -6,16 +6,16 @@ import androidx.annotation.NonNull;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import wailsmobile.Wailsmobile;
+import juicemobile.SweetJuicemobile;
 
 /**
- * WailsBackgroundWorker is the bridge between Android WorkManager and Go.
+ * SweetJuiceBackgroundWorker is the bridge between Android WorkManager and Go.
  * It is invoked by the OS even when the UI is not active.
  */
-public class WailsBackgroundWorker extends Worker {
-    private static final String TAG = "WailsBackgroundWorker";
+public class SweetJuiceBackgroundWorker extends Worker {
+    private static final String TAG = "SweetJuiceBackgroundWorker";
 
-    public WailsBackgroundWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+    public SweetJuiceBackgroundWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
 
@@ -33,7 +33,7 @@ public class WailsBackgroundWorker extends Worker {
         String payload = "[{\"task_key\":\"" + taskKey + "\"}]";
 
         // This invokes Go directly to execute backend processing
-        String goResult = Wailsmobile.handleNativeAction("workmanager:execute", payload);
+        String goResult = SweetJuicemobile.handleNativeAction("workmanager:execute", payload);
         Log.d(TAG, "Go execution response: " + goResult);
 
         // Allow Go to signal a retry if processing failed

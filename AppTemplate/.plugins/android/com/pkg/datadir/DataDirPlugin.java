@@ -1,8 +1,8 @@
-package com.wailspackage.datadir;
+package com.juicepackage.datadir;
 
 import android.content.Context;
 import android.content.Intent;
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.File;
@@ -10,7 +10,7 @@ import java.io.File;
 /**
  * DataDirPlugin provides access to standard Android application directories.
  */
-public class DataDirPlugin implements WailsPlugin {
+public class DataDirPlugin implements SweetJuicePlugin {
     private Context mContext;
 
     @Override

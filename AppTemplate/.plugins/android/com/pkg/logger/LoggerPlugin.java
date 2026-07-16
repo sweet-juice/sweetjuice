@@ -1,16 +1,16 @@
-package com.wailspackage.logger;
+package com.juicepackage.logger;
 
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import com.wailsplugin.WailsPlugin;
+import com.juiceplugin.SweetJuicePlugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * LoggerPlugin routes logs from Go to Android's Logcat.
  */
-public class LoggerPlugin implements WailsPlugin {
+public class LoggerPlugin implements SweetJuicePlugin {
     @Override
     public String getDomain() { return "logger"; }
 
@@ -22,7 +22,7 @@ public class LoggerPlugin implements WailsPlugin {
         if ("log".equals(action)) {
             try {
                 JSONObject args = new JSONObject(jsonArgsPayload);
-                String tag = args.optString("tag", "WailsGo");
+                String tag = args.optString("tag", "SweetJuiceGo");
                 String level = args.optString("level", "INFO");
                 String message = args.optString("message", "");
 

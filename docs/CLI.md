@@ -1,45 +1,45 @@
 # CLI Reference
 
-Compact reference and useful examples for the `wailsm` CLI.
+Compact reference and useful examples for the `juice` CLI.
 
 Synopsis
 
 ```
-Sweet Juice Toolchain CLI (wailsm)
+Sweet Juice Toolchain CLI (juice)
 Usage:
-  wailsm --new <project_name>        Create a fresh project from the template
-  wailsm --refresh <platform>        Run platform sync: 'android' or 'ios'
-  wailsm --build <platform> <mode>   Sync environment and compile app binary (debug/release/bundle)
-  wailsm --run <platform>            Compile, install, and execute application via ADB
-  wailsm --add <plugin-url>          Install a native Go/Mobile plugin
-  wailsm --remove <plugin-url>       Uninstall a native Go/Mobile plugin
+  juice --new <project_name>        Create a fresh project from the template
+  juice --refresh <platform>        Run platform sync: 'android' or 'ios'
+  juice --build <platform> <mode>   Sync environment and compile app binary (debug/release/bundle)
+  juice --run <platform>            Compile, install, and execute application via ADB
+  juice --add <plugin-url>          Install a native Go/Mobile plugin
+  juice --remove <plugin-url>       Uninstall a native Go/Mobile plugin
 ```
 
 Basic examples
 
 ```bash
 # Create a new project
-wailsm --new my-app
+juice --new my-app
 
 # Build debug APK
-wailsm --build android debug
+juice --build android debug
 
 # Build and run (the CLI performs sync automatically)
-wailsm --build android debug && wailsm --run android
+juice --build android debug && juice --run android
 
 # Build release bundle (AAB)
-wailsm --build android bundle
+juice --build android bundle
 
 # Add external plugin
-wailsm --add github.com/author/plugin
+juice --add github.com/author/plugin
 
 # Remove plugin
-wailsm --remove github.com/author/plugin
+juice --remove github.com/author/plugin
 ```
 
 When to use `--refresh`
 
-- The CLI automatically runs sync during `build`/`run`. Use `wailsm --refresh android` only when you want to force a rebuild of the generated AAR/JAR artifacts (for debugging or template changes).
+- The CLI automatically runs sync during `build`/`run`. Use `juice --refresh android` only when you want to force a rebuild of the generated AAR/JAR artifacts (for debugging or template changes).
 
 Environment notes
 
@@ -48,4 +48,4 @@ Environment notes
 
 CI / scripts
 
-- For CI pipelines prefer explicit commands: `wailsm --refresh android && wailsm --build android release` to keep steps visible.
+- For CI pipelines prefer explicit commands: `juice --refresh android && juice --build android release` to keep steps visible.
