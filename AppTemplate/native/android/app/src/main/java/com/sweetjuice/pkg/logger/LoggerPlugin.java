@@ -22,7 +22,7 @@ public class LoggerPlugin implements SweetJuicePlugin {
         if ("log".equals(action)) {
             try {
                 JSONObject args = new JSONObject(jsonArgsPayload);
-                String tag = args.optString("tag", "WailsGo");
+                String tag = args.optString("tag", "SweetJuiceGo");
                 String level = args.optString("level", "INFO");
                 String message = args.optString("message", "");
 

@@ -38,7 +38,7 @@ Package core provides the core runtime for Sweet Juice applications. It manages 
   - [func \(b \*MobileBridge\) RequestAssetMime\(urlPath string\) string](<#MobileBridge.RequestAssetMime>)
 - [type NativeCallHandler](<#NativeCallHandler>)
 - [type Options](<#Options>)
-- [type WailsEvent](<#WailsEvent>)
+- [type SweetJuiceEvent](<#SweetJuiceEvent>)
 - [type Window](<#Window>)
 - [type WindowOptions](<#WindowOptions>)
 
@@ -303,7 +303,7 @@ type NativeCallHandler interface {
 <a name="Options"></a>
 ## type [Options](<https://github.com/sweet-juice/sweetjuice/blob/main/core/app.go#L13-L22>)
 
-Options defines the application configuration following the Wails v3 pattern.
+Options defines the application configuration following the SweetJuice v3 pattern.
 
 ```go
 type Options struct {
@@ -318,13 +318,13 @@ type Options struct {
 }
 ```
 
-<a name="WailsEvent"></a>
-## type [WailsEvent](<https://github.com/sweet-juice/sweetjuice/blob/main/core/eventbus.go#L9-L12>)
+<a name="SweetJuiceEvent"></a>
+## type [SweetJuiceEvent](<https://github.com/sweet-juice/sweetjuice/blob/main/core/eventbus.go#L9-L12>)
 
-WailsEvent represents a standardized message format matching Wails v3 event packets.
+SweetJuiceEvent represents a standardized message format matching SweetJuice v3 event packets.
 
 ```go
-type WailsEvent struct {
+type SweetJuiceEvent struct {
     Name string      `json:"name"`
     Data interface{} `json:"data,omitempty"`
 }

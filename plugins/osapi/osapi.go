@@ -12,11 +12,22 @@ type OsApiPlugin struct {
 }
 
 type OsInfo struct {
+	// Common fields
+	SystemName    string `json:"system_name"`
+	SystemVersion string `json:"system_version"`
+	Model         string `json:"model"`
+
+	// Android specific
 	SdkInt       int    `json:"sdk_int"`
 	Release      string `json:"release"`
 	Codename     string `json:"codename"`
 	Manufacturer string `json:"manufacturer"`
-	Model        string `json:"model"`
+
+	// iOS specific
+	Name                string `json:"name"`
+	LocalizedModel      string `json:"localized_model"`
+	IdentifierForVendor string `json:"identifier_for_vendor"`
+	IsPhysicalDevice    bool   `json:"is_physical_device"`
 }
 
 // NewPlugin creates a new instance of the OsApi plugin.

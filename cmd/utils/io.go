@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // Fatal prints a formatted error message to stderr and exits the process with status 1.
@@ -211,13 +212,21 @@ func MoveFile(src, dest string) error {
 	return os.Remove(src)
 }
 
-// CopyDirectory recursively copies a directory and its contents from scrDir to destDir.
+// CopyDirectory recursively copies a directory and its contents from scrDir to destDir, excluding .git.
 func CopyDirectory(scrDir, destDir string) error {
 	return filepath.Walk(scrDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
 		relPath, _ := filepath.Rel(scrDir, path)
+		if relPath == ".git" || strings.HasPrefix(relPath, ".git/") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
 		targetPath := filepath.Join(destDir, relPath)
 		if info.IsDir() {
 			return os.MkdirAll(targetPath, info.Mode())

@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Wails Mobile"
+rootProject.name = "SweetJuice Mobile"
 include ':app'

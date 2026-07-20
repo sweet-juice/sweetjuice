@@ -31,7 +31,7 @@ deepLinkPlugin.OnURL(func(url string) {
 
 ## Android Configuration
 
-To receive deep links, you must configure an intent filter in your `AndroidManifest.xml` within the `.WailsWebViewActivity` activity tag:
+To receive deep links, you must configure an intent filter in your `AndroidManifest.xml` within the `.SweetJuiceWebViewActivity` activity tag:
 
 ```xml
 <intent-filter android:label="@string/app_name">
@@ -46,7 +46,7 @@ To receive deep links, you must configure an intent filter in your `AndroidManif
 ## Usage (Frontend)
 
 ```js
-Wails.on("deeplinking:received", (url) => {
+SweetJuice.on("deeplinking:received", (url) => {
   console.log("Deep link received:", url);
   // Route to the appropriate page in your frontend
 });

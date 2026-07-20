@@ -15,6 +15,14 @@ type boundMethod struct {
 
 // parseBindings loops through all bound interfaces and structures to extract call metadata.
 func (a *Application) parseBindings() error {
+	// Check if BindMap is provided; if so, convert it to a slice for uniform processing
+	if a.options.BindMap != nil {
+		for _, service := range a.options.BindMap {
+			a.options.Bind = append(a.options.Bind, service)
+		}
+	}
+
+	// Iterate through all bound services and extract their methods
 	for _, service := range a.options.Bind {
 		val := reflect.ValueOf(service)
 		typ := reflect.TypeOf(service)

@@ -36,6 +36,6 @@ if err == nil {
 ## Usage (Frontend)
 
 ```js
-const dirs = await Wails.CallGo('DataDirPlugin.GetDirs');
+const dirs = await SweetJuice.CallGo('DataDirPlugin.GetDirs');
 console.log("Internal Files Dir:", dirs.files);
 ```

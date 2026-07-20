@@ -1,16 +1,16 @@
 /**
- * wails.js - The Core Bridge Contract
+ * juice.js - The Core Bridge Contract
  * This file translates native calls to the frontend.
  * IT SHOULD NOT BE MODIFIED BY THE USER, UNLESS YOU KNOW WHAT YOU ARE DOING.
  */
-window.Wails = {
+window.SweetJuice = {
     /**
      * CallGo invokes a method bound in the Go backend.
      */
     CallGo: async function(methodName, ...args) {
-        if (!window.WailsBind) throw new Error('Native bridge not found.');
+        if (!window.SweetJuiceBind) throw new Error('Native bridge not found.');
         const jsonArgs = JSON.stringify(args);
-        const rawResponse = window.WailsBind.callGo(methodName, jsonArgs);
+        const rawResponse = window.SweetJuiceBind.callGo(methodName, jsonArgs);
         const parsed = JSON.parse(rawResponse);
         if (parsed.error) throw new Error(parsed.error);
         return parsed.result;
@@ -20,10 +20,10 @@ window.Wails = {
      */
     on: function(name, cb) {
         const attachListener = () => {
-            if (window.WailsBind && window.WailsBind.on) {
-                window.WailsBind.on(name, cb);
-            } else if (window.WailsEvents && window.WailsEvents.on) {
-                window.WailsEvents.on(name, cb);
+            if (window.SweetJuiceBind && window.SweetJuiceBind.on) {
+                window.SweetJuiceBind.on(name, cb);
+            } else if (window.SweetJuiceEvents && window.SweetJuiceEvents.on) {
+                window.SweetJuiceEvents.on(name, cb);
             } else {
                 setTimeout(attachListener, 100);
             }

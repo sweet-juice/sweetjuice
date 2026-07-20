@@ -1,4 +1,4 @@
-package com.example.wailsmobile;
+package com.example.juicemobile;
 
 import org.junit.Test;
 

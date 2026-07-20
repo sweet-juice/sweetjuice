@@ -47,14 +47,14 @@ permPlugin.Request("android.permission.CAMERA")
 
 ## Usage from Frontend (JavaScript)
 
-The frontend should strictly use the `Wails.CallGo` bridge.
+The frontend should strictly use the `SweetJuice.CallGo` bridge.
 
 ```js
 // Requesting permission
-await Wails.CallGo('PermissionPlugin.Request', "android.permission.CAMERA");
+await SweetJuice.CallGo('PermissionPlugin.Request', "android.permission.CAMERA");
 
 // Checking status
-const result = await Wails.CallGo('PermissionPlugin.Check', "android.permission.CAMERA");
+const result = await SweetJuice.CallGo('PermissionPlugin.Check', "android.permission.CAMERA");
 const parsed = JSON.parse(result);
 console.log("Status:", parsed.status);
 ```
@@ -63,7 +63,7 @@ console.log("Status:", parsed.status);
 When a permission is requested, the result is delivered as an event:
 
 ```js
-Wails.on('permissions:changed', (data) => {
+SweetJuice.on('permissions:changed', (data) => {
     console.log(`Permission for ${data.permission} is ${data.granted ? 'GRANTED' : 'DENIED'}`);
 });
 ```

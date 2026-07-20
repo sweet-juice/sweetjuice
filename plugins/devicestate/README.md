@@ -1,6 +1,6 @@
 # wails-mobile/devicestate
 
-This package provides access to Android device state information from Go and forwards state change events to the Wails frontend.
+This package provides access to Android device state information from Go and forwards state change events to the SweetJuice frontend.
 
 ## What it provides
 
@@ -52,7 +52,7 @@ _, err = deviceState.StartMonitoring()
 The plugin emits `devicestate:changed` whenever the native Android state changes.
 
 ```js
-Wails.on("devicestate:changed", (data) => {
+SweetJuice.on("devicestate:changed", (data) => {
   console.log("Device state updated", data)
 })
 ```

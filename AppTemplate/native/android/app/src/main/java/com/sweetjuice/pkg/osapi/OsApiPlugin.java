@@ -33,6 +33,8 @@ public class OsApiPlugin implements SweetJuicePlugin {
 
     private String getInfo() throws JSONException {
         JSONObject info = new JSONObject();
+        info.put("system_name", "Android");
+        info.put("system_version", Build.VERSION.RELEASE);
         info.put("sdk_int", Build.VERSION.SDK_INT);
         info.put("release", Build.VERSION.RELEASE);
         info.put("codename", Build.VERSION.CODENAME);

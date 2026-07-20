@@ -22,14 +22,16 @@ const (
 
 // ShowUsage prints the help information for the Sweet Juice CLI.
 func ShowUsage() {
-	fmt.Println("Sweet Juice Toolchain CLI (wailsm)")
+	fmt.Println("Sweet Juice Toolchain CLI (juice)")
 	fmt.Println("Usage:")
-	fmt.Println("  wailsm --new <project_name>        Create a fresh project from the template")
-	fmt.Println("  wailsm --refresh <platform>        Run platform sync: 'android' or 'ios'")
-	fmt.Println("  wailsm --build <platform> <mode>   Compile binaries: 'debug' (APK/IPA), 'release' (APK/IPA), or 'bundle' (AAB)")
-	fmt.Println("  wailsm --run <platform>            Compile, install, and execute application via ADB or xtool")
-	fmt.Println("  wailsm --add <plugin-url>          Install a native Go/Mobile plugin")
-	fmt.Println("  wailsm --remove <plugin-url>       Uninstall a native Go/Mobile plugin")
+	fmt.Println("  juice --new <project_name>        Create a fresh project from the template")
+	fmt.Println("  juice --refresh <platform>        Run platform sync: 'android' or 'ios'")
+	fmt.Println("  juice --build <platform> <mode>   Compile binaries: 'debug' (APK/IPA), 'release' (APK/IPA), or 'bundle' (AAB)")
+	fmt.Println("  juice --run <platform>            Compile, install, and execute application via ADB or xtool")
+	fmt.Println("  juice --run-cross <platform>      Cloud build (GitHub Actions), install, and execute")
+	fmt.Println("  juice --setup cross               Setup GitHub Action based cross-compilation for iOS")
+	fmt.Println("  juice --add <plugin-url>          Install a native Go/Mobile plugin")
+	fmt.Println("  juice --remove <plugin-url>       Uninstall a native Go/Mobile plugin")
 	os.Exit(1)
 }
 
@@ -173,6 +175,149 @@ func ExecuteRun(platform string) {
 		fmt.Fprintln(os.Stderr, "Error: Invalid platform. Use 'android' or 'ios'.")
 		os.Exit(1)
 	}
+}
+
+// ExecuteRunCross performs a cloud-based build using GitHub Actions for platforms
+// that cannot be built locally (e.g., iOS on Linux).
+func ExecuteRunCross(platform string) {
+	if platform != "ios" {
+		fmt.Println("Cross-build is currently only optimized for 'ios'. Running standard local build for others...")
+		ExecuteRun(platform)
+		return
+	}
+
+	config := utils.LoadConfig()
+	githubUser := config.GetOrDefault("cross", "github_user", "")
+	crossRepoPath := config.GetOrDefault("cross", "cross_repo_path", "")
+
+	if githubUser == "" || crossRepoPath == "" {
+		fmt.Println("Cross-build not configured. Please run 'juice --setup cross' first.")
+		os.Exit(1)
+	}
+
+	fmt.Printf("=== Initiating Cloud Cross-Build for %s ===\n", platform)
+	utils.EnsureGHCLILoggedIn()
+
+	// Ensure the repo path exists
+	if !utils.DirExists(crossRepoPath) {
+		fmt.Printf("Cross-build repository not found at %s. Attempting to restore...\n", crossRepoPath)
+		utils.RunCmd("gh", "repo", "clone", githubUser+"/juice-cross", crossRepoPath)
+	}
+
+	fmt.Println("Syncing codebase to cloud builder...")
+	// Clear old sync files (but keep .git and .github)
+	files, _ := os.ReadDir(crossRepoPath)
+	for _, f := range files {
+		if f.Name() == ".git" || f.Name() == ".github" {
+			continue
+		}
+		_ = os.RemoveAll(filepath.Join(crossRepoPath, f.Name()))
+	}
+
+	// We only sync the parts needed for binding: Go code and Frontend dist
+	if err := utils.CopyDirectory(".", crossRepoPath); err != nil {
+		utils.Fatal("Failed to sync code to cross-repo", err)
+	}
+
+	// Ensure the workflow is up-to-date from the internal template if possible
+	// For now we assume the fork has a valid bind.yml as we just set it up
+
+	// Cleanup destination from local-specific files
+	_ = os.RemoveAll(filepath.Join(crossRepoPath, "native"))
+	_ = os.RemoveAll(filepath.Join(crossRepoPath, "build"))
+	_ = os.RemoveAll(filepath.Join(crossRepoPath, "temps"))
+
+	// Build frontend locally first to ensure dist is populated
+	utils.BuildFrontend()
+
+	// Push changes to trigger GitHub Action
+	origWd, _ := os.Getwd()
+	_ = os.Chdir(crossRepoPath)
+	utils.RunCmd("git", "add", ".")
+	// It's okay if commit fails because of no changes
+	_ = exec.Command("git", "commit", "-m", "chore: automated cross-build sync").Run()
+	utils.RunCmd("git", "push", "origin", "main")
+	_ = os.Chdir(origWd)
+
+	// Wait for action
+	utils.WaitForActionFinish(crossRepoPath)
+
+	fmt.Println("\nDownloading built bindings from GitHub Release...")
+	iosNativePath := filepath.Join("native", "ios")
+	_ = os.MkdirAll(iosNativePath, 0755)
+
+	zipPath := filepath.Join(iosNativePath, "Sweetjuice.xcframework.zip")
+	releaseURL := fmt.Sprintf("https://github.com/%s/juice-cross/releases/latest/download/Sweetjuice.xcframework.zip", githubUser)
+
+	if err := utils.DownloadFile(releaseURL, zipPath); err != nil {
+		utils.Fatal("Failed to download built framework from release", err)
+	}
+
+	fmt.Println("Extracting framework...")
+	if err := utils.UnzipTarget(zipPath, iosNativePath); err != nil {
+		utils.Fatal("Failed to extract framework", err)
+	}
+	_ = os.Remove(zipPath)
+
+	fmt.Println("Cloud build integration successful. Launching on local hardware...")
+	ios.RunPipeline()
+}
+
+// ExecuteSetup handles toolchain or project-level configuration tasks.
+func ExecuteSetup(target string) {
+	if target != "cross" {
+		fmt.Fprintf(os.Stderr, "Error: Unknown setup target '%s'. Available: 'cross'\n", target)
+		os.Exit(1)
+	}
+
+	fmt.Println("=== Setting up Cross-Compilation Environment ===")
+	utils.EnsureGHCLILoggedIn()
+
+	// Get current GitHub user
+	out, err := exec.Command("gh", "api", "user", "-q", ".login").Output()
+	if err != nil {
+		utils.Fatal("Failed to get GitHub user info", err)
+	}
+	githubUser := strings.TrimSpace(string(out))
+	fmt.Printf("Detected GitHub user: %s\n", githubUser)
+
+	home, _ := os.UserHomeDir()
+	crossRepoPath := filepath.Join(home, ".sweetjuice", "juice-cross")
+
+	fmt.Println("\nStep 1: Forking sweet-juice/juice-cross...")
+	fmt.Println("Please ensure you have manually forked https://github.com/sweet-juice/juice-cross to your account.")
+
+	fmt.Println("\nStep 2: Cloning your fork locally...")
+	if !utils.DirExists(filepath.Dir(crossRepoPath)) {
+		_ = os.MkdirAll(filepath.Dir(crossRepoPath), 0755)
+	}
+
+	if utils.DirExists(crossRepoPath) {
+		fmt.Printf("Repository already exists at %s. Updating...\n", crossRepoPath)
+		origWd, _ := os.Getwd()
+		_ = os.Chdir(crossRepoPath)
+		utils.RunCmd("git", "pull", "origin", "main")
+		_ = os.Chdir(origWd)
+	} else {
+		utils.RunCmd("gh", "repo", "clone", githubUser+"/juice-cross", crossRepoPath)
+	}
+
+	fmt.Println("\nStep 3: Updating project configuration...")
+	if utils.FileExists("config.ini") {
+		// Update config.ini with these details
+		// We use a simple sed or replacement logic here
+		// In a real CLI, we might use a dedicated INI parser
+		data, _ := os.ReadFile("config.ini")
+		content := string(data)
+		content = strings.Replace(content, "github_user =", "github_user = "+githubUser, 1)
+		content = strings.Replace(content, "cross_repo_path =", "cross_repo_path = "+crossRepoPath, 1)
+		_ = os.WriteFile("config.ini", []byte(content), 0644)
+		fmt.Println("Successfully updated config.ini")
+	} else {
+		fmt.Println("Warning: config.ini not found in current directory. Configuration skipped.")
+	}
+
+	fmt.Println("\n=== Cross-compilation setup complete! ===")
 }
 
 // ManagePlugin handles the installation and removal of native Go/Mobile plugins.

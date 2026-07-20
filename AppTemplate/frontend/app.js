@@ -1,5 +1,5 @@
 /**
- * app.js - Wails Mobile Command Center Logic
+ * app.js - SweetJuice Mobile Command Center Logic
  */
 function updateOutput(text) {
     const output = document.getElementById('output');
@@ -46,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('request-notif').addEventListener('click', async () => {
         try {
-            await Wails.CallGo('PermissionPlugin.Request', "android.permission.POST_NOTIFICATIONS");
+            await SweetJuice.CallGo('PermissionPlugin.Request', "android.permission.POST_NOTIFICATIONS");
             updateOutput("Requested notification permission.");
         } catch (err) {
             updateOutput(`Error: ${err.message}`);
@@ -55,9 +55,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('send-notif').addEventListener('click', async () => {
         try {
-            const result = await Wails.CallGo('NotificationPlugin.Post', {
+            const result = await SweetJuice.CallGo('NotificationPlugin.Post', {
                 id: 0,
-                title: "Wails Mobile",
+                title: "SweetJuice Mobile",
                 body: "This is a unique verification notification.",
                 importance: "HIGH"
             });
@@ -73,7 +73,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('check-bio').addEventListener('click', async () => {
         try {
-            const res = await Wails.CallGo('BiometricPlugin.CanAuthenticate');
+            const res = await SweetJuice.CallGo('BiometricPlugin.CanAuthenticate');
             updateOutput(`Biometric Status: ${res.status} (Available: ${res.can_authenticate})`);
         } catch (err) {
             updateOutput(`Error: ${err.message}`);
@@ -83,7 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('auth-bio').addEventListener('click', async () => {
         try {
             updateOutput("Starting biometric authentication...");
-            await Wails.CallGo('BiometricPlugin.Authenticate', {
+            await SweetJuice.CallGo('BiometricPlugin.Authenticate', {
                 title: "Verify Identity",
                 subtitle: "Confirm biometric to proceed",
                 description: "This test ensures the native prompt bridge is working.",
@@ -100,7 +100,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pick-image').addEventListener('click', async () => {
         try {
             updateOutput("Opening image picker...");
-            await Wails.CallGo('FilePickerPlugin.PickFile', {
+            await SweetJuice.CallGo('FilePickerPlugin.PickFile', {
                 mime_type: "image/*",
                 multiple: true
             });
@@ -115,8 +115,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-daemon')?.addEventListener('click', async () => {
         try {
             updateOutput("Starting background daemon...");
-            await Wails.CallGo('DaemonPlugin.Start', {
-                title: "Wails Mobile",
+            await SweetJuice.CallGo('DaemonPlugin.Start', {
+                title: "SweetJuice Mobile",
                 message: "Core engine active in background",
                 importance: "LOW"
             });
@@ -128,7 +128,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('stop-daemon')?.addEventListener('click', async () => {
         try {
             updateOutput("Stopping background daemon...");
-            await Wails.CallGo('DaemonPlugin.Stop');
+            await SweetJuice.CallGo('DaemonPlugin.Stop');
         } catch (err) {
             updateOutput(`Error: ${err.message}`);
         }
@@ -137,12 +137,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    Wails.on('biometric:result', (result) => {
+    SweetJuice.on('biometric:result', (result) => {
         updateOutput(`BIOMETRIC EVENT: ${result.status} (Success: ${result.success})`);
         if (result.error) updateOutput(`Detail: ${result.error}`);
     });
 
-    Wails.on('filepicker:result', (result) => {
+    SweetJuice.on('filepicker:result', (result) => {
         if (result.error) {
             updateOutput(`FILEPICKER EVENT: ${result.error}`);
             return;
@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    Wails.on('permissions:changed', (data) => {
+    SweetJuice.on('permissions:changed', (data) => {
         updateOutput(`PERMISSION EVENT: ${data.permission} is ${data.granted ? 'GRANTED' : 'DENIED'}`);
     });
 

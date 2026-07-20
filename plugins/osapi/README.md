@@ -37,6 +37,6 @@ if err == nil {
 ## Usage (Frontend)
 
 ```js
-const info = await Wails.CallGo('OsApiPlugin.GetInfo');
+const info = await SweetJuice.CallGo('OsApiPlugin.GetInfo');
 console.log(`Running on Android ${info.release} (API ${info.sdk_int})`);
 ```
