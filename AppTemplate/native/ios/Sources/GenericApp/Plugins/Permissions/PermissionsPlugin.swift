@@ -4,6 +4,7 @@ import AVFoundation
 import UserNotifications
 import Sweetjuice
 
+@MainActor
 public class PermissionsPlugin: SweetJuicePlugin {
     private var container: UIViewController?
 
@@ -44,28 +45,40 @@ public class PermissionsPlugin: SweetJuicePlugin {
             let status = AVCaptureDevice.authorizationStatus(for: .video)
             return status == .authorized ? "granted" : "denied"
         case "notifications":
-            var status = "unknown"
+            let statusBox = TokenBox("unknown")
             let semaphore = DispatchSemaphore(value: 0)
+
             UNUserNotificationCenter.current().getNotificationSettings { settings in
-                status = settings.authorizationStatus == .authorized ? "granted" : "denied"
+                statusBox.value = settings.authorizationStatus == .authorized ? "granted" : "denied"
                 semaphore.signal()
             }
-            _ = semaphore.wait(timeout: .now() + 2)
-            return status
+
+            _ = semaphore.wait(timeout: .now() + 2.0)
+            return statusBox.value
         default:
             return "denied"
         }
     }
+}
+
+private class TokenBox: @unchecked Sendable {
+    var value: String
+    init(_ value: String) { self.value = value }
+}
 
     private func requestPermission(_ permission: String) {
         switch permission {
         case "camera":
             AVCaptureDevice.requestAccess(for: .video) { granted in
-                self.emitResult(permission: "camera", granted: granted)
+                Task { @MainActor in
+                    self.emitResult(permission: "camera", granted: granted)
+                }
             }
         case "notifications":
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
-                self.emitResult(permission: "notifications", granted: granted)
+                Task { @MainActor in
+                    self.emitResult(permission: "notifications", granted: granted)
+                }
             }
         default:
             break
@@ -74,7 +87,6 @@ public class PermissionsPlugin: SweetJuicePlugin {
 
     private func emitResult(permission: String, granted: Bool) {
         let payload = "[{\"permission\":\"\(permission)\", \"granted\":\(granted)}]"
-        // This helper is available because we import Sweetjuice
         SweetjuiceHandleNativeAction("permissions:result", payload)
     }
 }

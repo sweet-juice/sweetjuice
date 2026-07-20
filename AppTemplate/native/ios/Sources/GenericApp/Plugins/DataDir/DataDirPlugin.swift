@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 public class DataDirPlugin: SweetJuicePlugin {
     public init() {}
 

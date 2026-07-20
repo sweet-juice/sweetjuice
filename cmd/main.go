@@ -41,6 +41,18 @@ func main() {
 			os.Exit(1)
 		}
 		commands.ExecuteRun(os.Args[2])
+	case "--run-cross":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Error: Please specify a target platform: 'android' or 'ios'")
+			os.Exit(1)
+		}
+		commands.ExecuteRunCross(os.Args[2])
+	case "--setup":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Error: Please specify a setup target (e.g., 'cross').")
+			os.Exit(1)
+		}
+		commands.ExecuteSetup(os.Args[2])
 	case "--add":
 		if len(os.Args) < 3 {
 			fmt.Fprintln(os.Stderr, "Error: Please provide a valid plugin repository path.")

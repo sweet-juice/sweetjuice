@@ -6,7 +6,6 @@ package ios
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -35,26 +34,8 @@ func applyConfig() {
 	XFrameworkName = "Sweetjuice.xcframework"
 }
 
-// GetIOSSDKPath returns the path to the Darwin SDK provided by xtool.
-func GetIOSSDKPath() string {
-	home, _ := os.UserHomeDir()
-	path := filepath.Join(home, ".swiftpm", "swift-sdks", "darwin.artifactbundle")
-	if utils.DirExists(path) {
-		return path
-	}
-	return ""
-}
-
 // ValidateIOSEnvironment ensures the iOS build tools are available.
 func ValidateIOSEnvironment() {
-	if runtime.GOOS != "darwin" {
-		sdkPath := GetIOSSDKPath()
-		if sdkPath == "" {
-			utils.Fatal("iOS SDK missing", fmt.Errorf("could not locate xtool SDK at ~/.swiftpm/swift-sdks/darwin.artifactbundle. Please run 'xtool setup'"))
-		}
-		fmt.Printf("[ios] Using xtool SDK at %s\n", sdkPath)
-	}
-
 	if !utils.CommandExists("xtool") {
 		utils.Fatal("xtool missing", fmt.Errorf("please install xtool: https://github.com/mizage/xtool"))
 	}
@@ -114,14 +95,14 @@ func RefreshPipeline() {
 		}
 	}
 
-	// Step 1: Generate Go bindings
-	if runtime.GOOS == "darwin" {
-		fmt.Println("Generating Go bindings (XFramework) for iOS via gomobile...")
-		utils.RunCmd("gomobile", "bind", "-target="+IOSTarget, "-o", outputPath, ".")
-	} else {
-		fmt.Println("Generating Go bindings (XFramework) for iOS via xtool cross-toolchain...")
-		crossBindIOS(outputPath)
+	// Generate Go bindings (XCFramework) via gomobile bind
+	fmt.Println("Generating Go bindings (XCFramework) for iOS via gomobile...")
+	if runtime.GOOS != "darwin" {
+		fmt.Println("[ios] Note: Local iOS binding on Linux/Windows requires a specialized gomobile toolchain.")
+		fmt.Println("      It is recommended to use 'juice --run-cross ios' for GitHub Action based builds.")
 	}
+
+	utils.RunCmd("gomobile", "bind", "-target="+IOSTarget, "-o", outputPath, ".")
 
 	// Step 2: Sync plugins
 	if utils.DirExists(stagingPluginsDir) && !utils.DirEmpty(stagingPluginsDir) {
@@ -184,244 +165,4 @@ func RunPipeline() {
 	utils.RunCmd("xtool", "dev", "run")
 }
 
-func crossBindIOS(outputPath string) {
-	sdkPath := GetIOSSDKPath()
-	// Find iPhoneOS SDK root inside the artifact bundle
-	iphoneSDKBase := filepath.Join(sdkPath, "Developer", "Platforms", "iPhoneOS.platform", "Developer", "SDKs")
-	entries, _ := os.ReadDir(iphoneSDKBase)
-	var iphoneSDK string
-	for _, entry := range entries {
-		if strings.HasPrefix(entry.Name(), "iPhoneOS") && strings.HasSuffix(entry.Name(), ".sdk") {
-			iphoneSDK = filepath.Join(iphoneSDKBase, entry.Name())
-			break
-		}
-	}
 
-	if iphoneSDK == "" {
-		utils.Fatal("iOS SDK not found inside artifact bundle", fmt.Errorf("missing iPhoneOS.sdk"))
-	}
-
-	fmt.Printf("[ios] Using SDK: %s\n", iphoneSDK)
-
-	// Bindings generation
-	tempDir, _ := os.MkdirTemp("", "sweetjuice-ios-bind")
-	defer os.RemoveAll(tempDir)
-
-	fmt.Println("  -> Generating Objective-C and Go bindings...")
-	// Generate bindings into the temp dir.
-	// We use the current directory package.
-	utils.RunCmd("gobind", "-lang=go,objc", "-outdir", tempDir, ".")
-
-	// Get current module name
-	modName := "project"
-	if data, err := os.ReadFile("go.mod"); err == nil {
-		lines := strings.Split(string(data), "\n")
-		for _, line := range lines {
-			if strings.HasPrefix(line, "module ") {
-				modName = strings.TrimSpace(strings.TrimPrefix(line, "module "))
-				break
-			}
-		}
-	}
-
-	// Find the actual path of sweetjuice module
-	sweetjuicePath := ""
-	if out, err := exec.Command("go", "list", "-m", "-f", "{{.Dir}}", "github.com/sweet-juice/sweetjuice").Output(); err == nil {
-		sweetjuicePath = strings.TrimSpace(string(out))
-	}
-
-	// Create a temporary main package to build the c-archive
-	buildDir := filepath.Join(tempDir, "build")
-	_ = os.MkdirAll(buildDir, 0755)
-
-	// Copy the generated Go and Header files directly into our main package
-	gobindSrcDir := filepath.Join(tempDir, "src", "gobind")
-	files, _ := os.ReadDir(gobindSrcDir)
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".go") {
-			data, _ := os.ReadFile(filepath.Join(gobindSrcDir, file.Name()))
-			// Change package from 'gobind' to 'main' so it can be compiled together
-			content := strings.Replace(string(data), "package gobind", "package main", 1)
-
-			// If it's seq.go, add our required side-effect imports
-			if file.Name() == "seq.go" {
-				extraImports := fmt.Sprintf("\nimport _ \"golang.org/x/mobile/bind\"\nimport _ \"%s\"\n", modName)
-				content = strings.Replace(content, "package main", "package main"+extraImports, 1)
-			}
-
-			_ = os.WriteFile(filepath.Join(buildDir, file.Name()), []byte(content), 0644)
-		} else if strings.HasSuffix(file.Name(), ".h") || strings.HasSuffix(file.Name(), ".m") {
-			// Copy headers and implementation files as well for cgo to find and compile them
-			data, _ := os.ReadFile(filepath.Join(gobindSrcDir, file.Name()))
-			_ = os.WriteFile(filepath.Join(buildDir, file.Name()), []byte(data), 0644)
-		}
-	}
-
-	// Create a temporary go.mod for the build
-	absPath, _ := filepath.Abs(".")
-	var goModLines []string
-	goModLines = append(goModLines, "module build", "go 1.24", "", "require (")
-	goModLines = append(goModLines, fmt.Sprintf("\t%s v0.0.0", modName))
-	if sweetjuicePath != "" {
-		goModLines = append(goModLines, "\tgithub.com/sweet-juice/sweetjuice v0.0.0")
-	}
-	goModLines = append(goModLines, ")", "", fmt.Sprintf("replace %s => %s", modName, absPath))
-	if sweetjuicePath != "" {
-		goModLines = append(goModLines, fmt.Sprintf("replace github.com/sweet-juice/sweetjuice => %s", sweetjuicePath))
-	}
-	_ = os.WriteFile(filepath.Join(buildDir, "go.mod"), []byte(strings.Join(goModLines, "\n")), 0644)
-
-	// Compile Go to static library
-	fmt.Println("  -> Compiling Go for ios/arm64...")
-	swiftBin := "/usr/lib/swift/bin"
-	llvmRanlib := filepath.Join(swiftBin, "llvm-ranlib")
-	llvmAr := filepath.Join(swiftBin, "llvm-ar")
-
-	origWd, _ := os.Getwd()
-	_ = os.Chdir(buildDir)
-	defer func() { _ = os.Chdir(origWd) }()
-
-	fmt.Println("  -> Resolving dependencies...")
-	utils.RunCmd("go", "mod", "tidy")
-
-	// Use a unique name for the core library to avoid header conflicts with gobind
-	cmd := exec.Command("go", "build", "-buildmode=c-archive", "-tags", "ios", "-o", "SweetjuiceCore.a", ".")
-	cmd.Env = append(os.Environ(),
-		"PATH="+swiftBin+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"GOOS=ios",
-		"GOARCH=arm64",
-		"CGO_ENABLED=1",
-		"AR="+llvmAr,
-		"CC=clang -target arm64-apple-ios17.0 -isysroot "+iphoneSDK,
-		"CXX=clang++ -target arm64-apple-ios17.0 -isysroot "+iphoneSDK,
-		"CGO_CFLAGS=-I. -D__GOBIND_DARWIN__",
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		utils.Fatal("Go compilation for iOS failed", err)
-	}
-
-	// Create XFramework structure
-	frameworkDir := filepath.Join(origWd, outputPath, "ios-arm64", "Sweetjuice.framework")
-	_ = os.MkdirAll(filepath.Join(frameworkDir, "Headers"), 0755)
-	_ = os.MkdirAll(filepath.Join(frameworkDir, "Modules"), 0755)
-
-	// Copy binary. IMPORTANT: Rename to match framework name
-	targetBinary := filepath.Join(frameworkDir, "Sweetjuice")
-	if err := utils.MoveFile(filepath.Join(buildDir, "SweetjuiceCore.a"), targetBinary); err != nil {
-		utils.Fatal("Failed to move compiled library to framework", err)
-	}
-
-	// Add symbol index using the correct LLVM tool for Apple targets
-	fmt.Println("  -> Indexing framework binary...")
-	utils.RunCmd(llvmRanlib, targetBinary)
-
-	// Copy ALL headers from gobind
-	files, _ = os.ReadDir(gobindSrcDir)
-	for _, file := range files {
-		name := file.Name()
-		if strings.HasSuffix(name, ".h") {
-			data, _ := os.ReadFile(filepath.Join(gobindSrcDir, name))
-			content := string(data)
-			// Force __GOBIND_DARWIN__ in seq.h to fix nstring errors
-			if name == "seq.h" {
-				content = "#ifndef __GOBIND_DARWIN__\n#define __GOBIND_DARWIN__\n#endif\n" + content
-			}
-			_ = os.WriteFile(filepath.Join(frameworkDir, "Headers", name), []byte(content), 0644)
-		}
-	}
-
-	// Copy and patch the generated C core header
-	coreHeaderPath := filepath.Join(buildDir, "SweetjuiceCore.h")
-	if !utils.FileExists(coreHeaderPath) {
-		// Fallback to lowercase if needed
-		coreHeaderPath = filepath.Join(buildDir, "sweetjuicecore.h")
-	}
-
-	if data, err := os.ReadFile(coreHeaderPath); err == nil {
-		coreHeaderContent := string(data)
-		// Change include to avoid confusion with the gobind sweetjuice.h
-		coreHeaderContent = strings.ReplaceAll(coreHeaderContent, "#include \"sweetjuice.h\"", "#include \"Sweetjuice.objc.h\"")
-		_ = os.WriteFile(filepath.Join(frameworkDir, "Headers", "SweetjuiceCore.h"), []byte(coreHeaderContent), 0644)
-	}
-
-	// Create Umbrella Header
-	umbrellaHeader := ""
-	headers, _ := os.ReadDir(filepath.Join(frameworkDir, "Headers"))
-	for _, h := range headers {
-		name := h.Name()
-		// Only include top-level headers, skip the umbrella itself
-		if strings.HasSuffix(name, ".h") && name != "Sweetjuice.h" {
-			umbrellaHeader += fmt.Sprintf("#import \"%s\"\n", name)
-		}
-	}
-	_ = os.WriteFile(filepath.Join(frameworkDir, "Headers", "Sweetjuice.h"), []byte(umbrellaHeader), 0644)
-
-	// Create Module Map
-	moduleMap := `framework module Sweetjuice {
-  umbrella header "Sweetjuice.h"
-  export *
-  module * { export * }
-}`
-	_ = os.WriteFile(filepath.Join(frameworkDir, "Modules", "module.modulemap"), []byte(moduleMap), 0644)
-
-	// Create Info.plist for framework
-	plistContent := `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>CFBundleExecutable</key>
-	<string>Sweetjuice</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.sweetjuice.core</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>Sweetjuice</string>
-	<key>CFBundlePackageType</key>
-	<string>FMWK</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1.0</string>
-	<key>CFBundleSupportedPlatforms</key>
-	<array>
-		<string>iPhoneOS</string>
-	</array>
-	<key>MinimumOSVersion</key>
-	<string>17.0</string>
-</dict>
-</plist>`
-	_ = os.WriteFile(filepath.Join(frameworkDir, "Info.plist"), []byte(plistContent), 0644)
-
-	// Create Info.plist for XCFramework
-	xcPlistContent := `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>AvailableLibraries</key>
-	<array>
-		<dict>
-			<key>LibraryIdentifier</key>
-			<string>ios-arm64</string>
-			<key>LibraryPath</key>
-			<string>Sweetjuice.framework</string>
-			<key>SupportedArchitectures</key>
-			<array>
-				<string>arm64</string>
-			</array>
-			<key>SupportedPlatform</key>
-			<string>ios</string>
-		</dict>
-	</array>
-	<key>CFBundlePackageType</key>
-	<string>XFWK</string>
-	<key>XCFrameworkFormatVersion</key>
-	<string>1.0</string>
-</dict>
-</plist>`
-	_ = os.WriteFile(filepath.Join(origWd, outputPath, "Info.plist"), []byte(xcPlistContent), 0644)
-
-	fmt.Println("  -> XCFramework assembled successfully with module map.")
-}

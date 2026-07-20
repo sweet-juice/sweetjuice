@@ -3,6 +3,7 @@ package sweetjuice
 import (
 	"embed"
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/sweet-juice/sweetjuice/core"
@@ -11,11 +12,12 @@ import (
 	"github.com/sweet-juice/sweetjuice/plugins/filepicker"
 	"github.com/sweet-juice/sweetjuice/plugins/logger"
 	"github.com/sweet-juice/sweetjuice/plugins/notification"
+	"github.com/sweet-juice/sweetjuice/plugins/osapi"
 	"github.com/sweet-juice/sweetjuice/plugins/permission"
 	"github.com/sweet-juice/sweetjuice/plugins/workmanager"
 )
 
-//go:embed frontend/dist/*
+//go:embed all:frontend/dist
 var assets embed.FS
 
 // Global plugin instances
@@ -26,6 +28,7 @@ var (
 	biometricPlugin = biometric.NewPlugin()
 	filePicker      = filepicker.NewPlugin()
 	daemonPlugin    = daemon.NewPlugin()
+	osPlugin        = osapi.NewPlugin()
 	log             = logger.NewPlugin("[Sweet Juice]")
 )
 
@@ -48,17 +51,24 @@ func StartApplication() string {
 		Name:   "Sweet Juice",
 		Assets: assets,
 		Bind: []interface{}{
-			helloService, // Always bind the main application service
+			// Main Application Service
+			helloService, // always bind the main application service
+
+			// Plugins
 			permPlugin,
 			wmPlugin,
 			notifyPlugin,
 			biometricPlugin,
 			filePicker,
 			daemonPlugin,
+			osPlugin,
 		},
 		OnStart: func(app *core.Application) error {
-			// Initialize plugins
+			// Initialize all plugins
 			if err := log.Init(app); err != nil {
+				return err
+			}
+			if err := osPlugin.Init(app); err != nil {
 				return err
 			}
 			if err := permPlugin.Init(app); err != nil {
@@ -82,6 +92,28 @@ func StartApplication() string {
 
 			log.Info("Go Application started!")
 
+			// Test OS detection and Permission Request
+			time.AfterFunc(5*time.Second, func() {
+				info, err := osPlugin.GetInfo()
+				if err != nil {
+					log.Error("Failed to get OS info: %v", err)
+					return
+				}
+				log.Info("Detected OS: %s %s", info.SystemName, info.SystemVersion)
+
+				// Example: Request notifications permission specifically for the platform
+				var perm string
+				if runtime.GOOS == "ios" || info.SystemName == "iOS" {
+					perm = "notifications"
+				} else {
+					perm = "android.permission.POST_NOTIFICATIONS"
+				}
+
+				log.Info("Requesting %s permission...", perm)
+				status, _ := permPlugin.Request(perm)
+				log.Info("Permission request status: %s", status)
+			})
+
 			// Example: Register a background task
 			wmPlugin.RegisterTask("sync_analytics", func() error {
 				log.Info("Background task sync_analytics invoked")
@@ -94,7 +126,7 @@ func StartApplication() string {
 				return nil
 			})
 
-			// Schedule the background task to run every 15 minutes after a 30-second delay
+			// Example: Schedule the background task to run every 15 minutes after a 30-second delay
 			time.AfterFunc(30*time.Second, func() {
 				if status, err := permPlugin.Check("android.permission.POST_NOTIFICATIONS"); status != "granted" {
 					log.Error("Permission check failed: %v", err)

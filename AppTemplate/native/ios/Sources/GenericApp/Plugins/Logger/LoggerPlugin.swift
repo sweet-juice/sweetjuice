@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 public class LoggerPlugin: SweetJuicePlugin {
     public init() {}
 

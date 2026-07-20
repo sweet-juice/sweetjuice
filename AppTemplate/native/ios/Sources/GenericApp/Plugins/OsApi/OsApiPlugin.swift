@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 public class OsApiPlugin: SweetJuicePlugin {
     public init() {}
 
@@ -21,14 +22,21 @@ public class OsApiPlugin: SweetJuicePlugin {
 
     private func getInfo() -> String {
         let device = UIDevice.current
+
+        #if targetEnvironment(simulator)
+        let isPhysicalDevice = false
+        #else
+        let isPhysicalDevice = true
+        #endif
+
         let info: [String: Any] = [
             "name": device.name,
-            "systemName": device.systemName,
-            "systemVersion": device.systemVersion,
+            "system_name": device.systemName,
+            "system_version": device.systemVersion,
             "model": device.model,
-            "localizedModel": device.localizedModel,
-            "identifierForVendor": device.identifierForVendor?.uuidString ?? "",
-            "isPhysicalDevice": TARGET_OS_SIMULATOR == 0
+            "localized_model": device.localizedModel,
+            "identifier_for_vendor": device.identifierForVendor?.uuidString ?? "",
+            "is_physical_device": isPhysicalDevice
         ]
 
         if let data = try? JSONSerialization.data(withJSONObject: info),

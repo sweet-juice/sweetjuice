@@ -3,6 +3,7 @@ import UIKit
 import LocalAuthentication
 import Sweetjuice
 
+@MainActor
 public class BiometricPlugin: SweetJuicePlugin {
     private var container: UIViewController?
 
@@ -66,7 +67,9 @@ public class BiometricPlugin: SweetJuicePlugin {
                 }
             }
 
-            self.sendResult(success: success, status: status, error: errMsg)
+            Task { @MainActor in
+                self.sendResult(success: success, status: status, error: errMsg)
+            }
         }
 
         return "{\"status\":\"started\"}"

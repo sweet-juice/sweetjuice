@@ -3,6 +3,7 @@ import UIKit
 import Network
 import Sweetjuice
 
+@MainActor
 public class DeviceStatePlugin: SweetJuicePlugin {
     private var container: UIViewController?
     private let monitor = NWPathMonitor()
@@ -50,7 +51,7 @@ public class DeviceStatePlugin: SweetJuicePlugin {
         let connectivity: [String: Any] = [
             "is_connected": path.status == .satisfied,
             "network_type": getNetworkType(path: path),
-            "is_roaming": false, // iOS doesn't expose this easily via NWPath
+            "is_roaming": false,
             "is_unmetered": !path.isExpensive
         ]
         state["connectivity"] = connectivity
@@ -82,16 +83,20 @@ public class DeviceStatePlugin: SweetJuicePlugin {
     private func startMonitoring() -> String {
         if isMonitoring { return "{\"status\":\"already_monitoring\"}" }
 
-        monitor.pathUpdateHandler = { [weak self] _ in
-            self?.emitStateChanged()
+        monitor.pathUpdateHandler = { _ in
+            Task { @MainActor in
+                self.emitStateChanged()
+            }
         }
         let queue = DispatchQueue(label: "DeviceStateMonitor")
         monitor.start(queue: queue)
 
         NotificationCenter.default.addObserver(
             forName: UIDevice.batteryLevelDidChangeNotification,
-            object: nil, queue: .main) { [weak self] _ in
-                self?.emitStateChanged()
+            object: nil, queue: .main) { _ in
+                Task { @MainActor in
+                    self.emitStateChanged()
+                }
         }
 
         isMonitoring = true

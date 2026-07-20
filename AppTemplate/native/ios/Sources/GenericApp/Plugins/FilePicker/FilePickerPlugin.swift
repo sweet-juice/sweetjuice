@@ -3,6 +3,7 @@ import UIKit
 import UniformTypeIdentifiers
 import Sweetjuice
 
+@MainActor
 public class FilePickerPlugin: NSObject, SweetJuicePlugin, UIDocumentPickerDelegate {
     private var container: UIViewController?
 
@@ -28,7 +29,7 @@ public class FilePickerPlugin: NSObject, SweetJuicePlugin, UIDocumentPickerDeleg
             let multiple = args["multiple"] as? Bool ?? false
 
             DispatchQueue.main.async {
-                let picker = UIDocumentPickerViewController(forOpeningOver: [.data, .content])
+                let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.data, .content])
                 picker.delegate = self
                 picker.allowsMultipleSelection = multiple
                 self.container?.present(picker, animated: true)
@@ -39,7 +40,7 @@ public class FilePickerPlugin: NSObject, SweetJuicePlugin, UIDocumentPickerDeleg
         return "{\"error\":\"Unknown action\"}"
     }
 
-    public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+    public nonisolated func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         let uris = urls.map { $0.absoluteString }
         let result: [String: Any] = [
             "uris": uris,
@@ -53,7 +54,7 @@ public class FilePickerPlugin: NSObject, SweetJuicePlugin, UIDocumentPickerDeleg
         }
     }
 
-    public func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    public nonisolated func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         SweetjuiceHandleNativeAction("filepicker:result", "[{\"error\":\"cancelled\"}]")
     }
 }

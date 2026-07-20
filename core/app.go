@@ -17,6 +17,8 @@ type Options struct {
 	Assets embed.FS
 	// Bind is a slice of struct instances to export to the frontend.
 	Bind []interface{}
+	// BindMap is a map of struct instances to export to the frontend, keyed by their names.
+	BindMap map[string]interface{}
 	// OnStart is a callback triggered when the application has initialized.
 	OnStart func(app *Application) error
 }

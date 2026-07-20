@@ -12,6 +12,7 @@ type Config struct {
 	Build   map[string]string
 	Android map[string]string
 	IOS     map[string]string
+	Cross   map[string]string
 }
 
 // LoadConfig reads and parses config.ini from the current directory.
@@ -21,6 +22,7 @@ func LoadConfig() *Config {
 		Build:   make(map[string]string),
 		Android: make(map[string]string),
 		IOS:     make(map[string]string),
+		Cross:   make(map[string]string),
 	}
 
 	file, err := os.Open("config.ini")
@@ -59,6 +61,8 @@ func LoadConfig() *Config {
 			config.Android[key] = value
 		case "ios":
 			config.IOS[key] = value
+		case "cross":
+			config.Cross[key] = value
 		}
 	}
 
@@ -77,6 +81,8 @@ func (c *Config) GetOrDefault(section, key, defaultValue string) string {
 		m = c.Android
 	case "ios":
 		m = c.IOS
+	case "cross":
+		m = c.Cross
 	}
 
 	if val, ok := m[key]; ok && val != "" {

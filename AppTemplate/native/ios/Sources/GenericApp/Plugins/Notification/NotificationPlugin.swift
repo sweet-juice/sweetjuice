@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import UserNotifications
 
+@MainActor
 public class NotificationPlugin: SweetJuicePlugin {
     private var container: UIViewController?
 

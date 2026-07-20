@@ -66,7 +66,7 @@ struct SweetJuiceWebView: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, SweetjuiceNativeCallHandlerProtocol {
         private var isPolling = true
 
-        // nonisolated to satisfy SweetjuiceNativeCallHandlerProtocol (called from Go thread)
+        // nonisolated is required to satisfy SweetjuiceNativeCallHandlerProtocol (called from Go thread)
         nonisolated func onNativeCall(_ method: String?, args: String?) -> String {
             let methodKey = method ?? ""
             let jsonArgs = args ?? ""
@@ -109,7 +109,7 @@ struct SweetJuiceWebView: UIViewRepresentable {
             }
         }
 
-        func getPollingStatus() -> Bool {
+        func getPollingStatus() async -> Bool {
             return isPolling
         }
 
